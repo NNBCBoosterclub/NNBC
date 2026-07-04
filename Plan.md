@@ -1,169 +1,154 @@
-# NNBC Snack Bar — Migration & Hosting Plan
+# NNBC Snack Bar - Implementation Plan (Collaborative, Gate-Based)
 
-## Background
+## Build Intent
 
-The app is a static PWA (no build step) currently hosted on GitHub Pages at
-`https://nnbcboosterclub.github.io/NNBC/`. GitHub Pages cannot run server code,
-so data that needs to be shared across devices (inventory, orders, receipts)
-previously had to be written back to the GitHub repo as JSON via a Personal
-Access Token — fragile, slow, and rate-limited.
+This document is the active implementation ledger. We are building in small phases with explicit review checkpoints so implementation remains conversational and transparent.
 
-**Goal:** Replace that architecture with a real backend that supports:
-- Shared inventory (stock decrements visible to all users instantly)
-- Multi-device order history
-- Admin receipt storage with images
-- User accounts and profiles with avatars
-- Weekly nutrition summaries
-- No dedicated server to maintain
+### Collaboration Rules
+1. No large end-to-end build without interim updates.
+2. Every phase ends with a go/no-go checkpoint.
+3. Changes are made in small slices with rationale and verification notes.
 
----
+## Architecture Decision (Locked)
 
-## Tier Comparison
+Program-level choice: Need both.
 
-| Feature | Free (Supabase) | $10/mo | $25/mo |
-|---|---|---|---|
-| **Hosting** | GitHub Pages (static) | GitHub Pages + Supabase Pro | GitHub Pages + Supabase Pro |
-| **Database** | Supabase Free (500 MB) | Supabase Pro (8 GB) | Supabase Pro (8 GB) |
-| **Auth** | Supabase Auth (50K MAU) | Supabase Auth (100K MAU) | Supabase Auth (100K MAU) |
-| **Realtime** | ✅ Stock sync | ✅ Stock sync | ✅ Stock sync |
-| **Storage** | 1 GB (avatars + receipts) | 100 GB | 100 GB |
-| **Edge Functions** | 500K invocations/mo | 2M invocations/mo | 2M invocations/mo |
-| **OCR (receipt)** | ❌ Manual entry | ✅ Supabase Edge Function + Vision API | ✅ Full automation |
-| **Custom domain** | ❌ github.io only | ✅ Custom domain on Pages | ✅ Custom domain + Cloudflare CDN |
-| **Backups** | Manual export | Daily auto-backup | Daily auto-backup |
-| **Estimated cost** | **$0** | **~$10** | **~$25** |
+1. Public runtime: Keep direct path (storefront and checkout run without SharePoint dependency).
+2. Internal operations: internal-only mirror for manifests, calendar coordination, and communication.
+3. Failure rule: internal automation failures must not block public checkout.
 
----
+## Mandatory Compliance Statement
 
-## Tier 1 — Free (Active)
+Required text for public-facing interfaces:
 
-**Stack:** Supabase Free + GitHub Pages
+"This organization is an Unofficial Activity / Private Organization. It is not a part of the Department of Defense or any of its components and has no governmental status."
 
-### Upgrade triggers
-- Storage approaches 800 MB (avatar/receipt images)
-- More than 500 concurrent customers (Supabase free realtime limit)
-- Need for automated OCR on receipt photos
+Status:
+1. Implemented in storefront header area.
+2. Implemented in admin interface header area.
+3. Remaining: verify QR/print and any future landing pages also include the notice.
 
-### Architecture
-```
-Browser (GitHub Pages)
-    │
-    ├── js/db.js  →  Supabase (Free)
-    │                   ├── PostgreSQL  (menu_items, orders, profiles, receipts)
-    │                   ├── Auth        (email/password)
-    │                   ├── Realtime    (Postgres changes → stock sync)
-    │                   └── Storage     (avatars, receipt images)
-    └── Static assets: HTML, CSS, JS (no build step)
-```
+## Phase Ledger
 
----
+### Phase 0 - Scope and Compliance Baseline
 
-## Tier 2 — $10/mo
+Objective: lock constraints before deeper build.
 
-**Stack:** Supabase Pro + GitHub Pages + custom domain
+Checklist:
+1. [x] Architecture separation defined and documented.
+2. [x] Mandatory disclaimer added to primary pages.
+3. [ ] Confirm exact legal wording and placement for QR/print flows.
+4. [ ] Confirm timezone authority for Thursday 23:59 and Friday 00:00 events.
 
-- Upgrade `supabase.com` project to Pro plan (~$25/mo base, or ~$10 with org discount)
-- Add custom domain via GitHub Pages settings
-- Add receipt OCR: Supabase Edge Function that POSTs image to Google Vision API
-  (Vision API free tier: 1K calls/mo; billed at $1.50/K after)
+Gate A decision needed from operator:
+1. Final disclaimer wording approved.
+2. Event time standard approved.
 
-### Downgrade triggers
-- Usage stays below free tier limits for 3+ months
+### Phase 1 - Public Storefront Controls
 
----
+Objective: ensure customer flow remains robust and policy-compliant.
 
-## Tier 3 — $25/mo
+Primary path (COA 1):
+1. Barcode scanner in mobile browser camera flow.
+2. Programmatic ticket gate at Thursday 23:59.
 
-**Stack:** Supabase Pro + GitHub Pages + Cloudflare Workers + Resend email
+Fallback (COA 2):
+1. Manual product search and add-to-cart when camera is blocked.
+2. Manual ticket quantity deprecation by admin at cutoff.
 
-- Add Cloudflare Workers for edge rate-limiting, Venmo webhook verification
-- Add Resend for transactional email (weekly nutrition summary, order receipts)
-- Full automated OCR pipeline with itemized product matching
+Checklist:
+1. [ ] Verify scanner and manual search both pass on mobile.
+2. [ ] Implement and test ticket hard-gate behavior for event items.
+3. [ ] Validate checkout tax behavior and display language.
 
-### Downgrade triggers
-- Email send volume drops below 100/mo (free Resend tier)
-- Edge functions not needed for internal-only tool
+Gate B:
+1. Confirm ticket gating behavior is acceptable before internal automation work begins.
 
----
+### Phase 2 - Internal Data Hub (SharePoint/M365 Lane)
 
-## Repository Files
+Objective: stage internal operational mirror without coupling storefront runtime.
 
-| File | Purpose |
-|---|---|
-| `index.html` | Customer PWA — menu, cart, checkout, auth, profile |
-| `admin.html` | Admin panel — products, stock, receipts, orders, status |
-| `js/db.js` | Supabase data layer (`window.DB`) — all backend calls |
-| `supabase/schema.sql` | One-time database setup script (run in Supabase SQL Editor) |
-| `products.json` | Legacy fallback — no longer the source of truth |
-| `receipts.json` | Legacy — replaced by Supabase `receipts` table |
-| `store-status.json` | Legacy — replaced by Supabase `store_status` table |
+Primary path (COA 1):
+1. SharePoint Lists: Inventory Master, Historical Transactions, Event Attendance.
 
----
+Fallback (COA 2):
+1. Teams-hosted secured spreadsheet mirror with equivalent schema.
 
-## Setup Instructions (Tier 1 — Free)
+Mirror payload scope (minimum):
+1. Order id
+2. Attendee name
+3. Item type
+4. Quantity
+5. Event date
+6. Order timestamp
+7. Payment status
 
-### 1. Create Supabase Project
-1. Go to [supabase.com](https://supabase.com) → New Project
-2. Choose a region close to your users
-3. Save the **Project URL** and **anon public key** from Settings → API
+Checklist:
+1. [ ] Finalize mirror schema mapping from existing Supabase tables.
+2. [ ] Define one-way sync contract and retry behavior.
+3. [ ] Define manual export contingency for blocked connector scenarios.
 
-### 2. Run Database Schema
-1. In Supabase dashboard → SQL Editor
-2. Paste the contents of `supabase/schema.sql` and run it
-3. This creates all tables, RLS policies, functions, and seed data
+Gate C:
+1. Approve internal schema and sync contract.
 
-### 3. Create Storage Buckets
-In Supabase → Storage:
-- Create bucket `avatars` — **Public**
-- Create bucket `receipts` — **Private**
+### Phase 3 - Friday Manifest and Email Automation
 
-### 4. Configure `js/db.js`
-Replace the placeholder values at the top of `js/db.js`:
-```javascript
-const SUPABASE_URL      = "https://YOUR_PROJECT_REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
-```
+Objective: generate and deliver Friday manifest at required time.
 
-### 5. Deploy to GitHub Pages
-Push to `main` branch. GitHub Pages serves the static files; Supabase handles the data.
+Primary path (COA 1):
+1. Scheduled flow at Thursday 23:59 or Friday 00:00.
+2. Build unclassified plain-text roster from ticket data.
+3. Send through approved internal relay to .mil distribution lists.
 
----
+Fallback (COA 2):
+1. Manual CSV roster export.
+2. Manual controlled email release.
 
-## Migration Protocol (localStorage → Supabase)
+Checklist:
+1. [ ] Define scheduler owner and timezone source.
+2. [ ] Draft manifest format template.
+3. [ ] Run dry-run with sample data.
+4. [ ] Validate message format against gateway filter expectations.
 
-Existing localStorage data (orders, products, accounts) is **not** automatically
-migrated. Options:
+Gate D:
+1. Approve automation job and manual fallback playbook.
 
-1. **Start fresh** (recommended for internal tool with small user base): existing
-   users create new Supabase accounts; admin re-enters any product customizations.
+### Phase 4 - Calendar and Communication Sync
 
-2. **Manual migration**: Export localStorage data from browser console, transform
-   to Supabase row format, and INSERT via SQL Editor.
+Objective: align event comms without affecting payment runtime.
 
-The admin can re-run `initSharedDataFromServer()` at any time to pull the latest
-state from Supabase.
+Checklist:
+1. [ ] Select calendar source of truth.
+2. [ ] Map one-way event timing sync into storefront gate controls.
+3. [ ] Verify no coupling to checkout path.
 
----
+Gate E:
+1. Approve calendar/comms boundaries.
 
-## Acceptance Tests
+### Phase 5 - Restock Logistics Optimization
 
-- [ ] Customer can browse menu on two different devices and see the same stock levels
-- [ ] Cash checkout decrements stock visible on both devices within 5 seconds (Realtime)
-- [ ] Venmo checkout opens Venmo with correct amount pre-filled
-- [ ] User can register, log in, log out, and log back in
-- [ ] Profile page shows order history from Supabase
-- [ ] Weekly nutrition totals reflect only the current user's last 7 days
-- [ ] Admin can add/edit/delete menu items — changes appear on customer page
-- [ ] Admin can upload a receipt and stock quantities update
-- [ ] Admin can mark cash orders as paid
-- [ ] Store status banner appears on customer page when admin sets "ordered" or "restocked"
+Objective: reduce operator effort for replenishment.
 
----
+Primary path (COA 1):
+1. Threshold-based restock manifest generation.
+2. Optional wholesale deep-link/cart prefill where supported.
 
-## Security Notes
+Fallback (COA 2):
+1. Plain-text restock ledger optimized for rapid manual entry/search.
 
-- **Anon key is safe to ship in JS** — it is the public role key, not the service role key
-- **RLS policies** (in `schema.sql`) prevent cross-user data access for profiles
-- **Admin PIN** is hashed with SHA-256 + salt and stored in `sessionStorage` (cleared on browser close)
-- **No GitHub PAT** is needed or stored after this migration
-- For production hardening: tighten RLS on `orders` and `menu_items` tables to require authenticated users
+Checklist:
+1. [ ] Confirm threshold policy.
+2. [ ] Implement manifest output format.
+3. [ ] Validate fallback usability.
+
+Gate F:
+1. Approve final logistics flow.
+
+## Current Sprint Start (Today)
+
+Started implementation with Phase 0 baseline items:
+1. Added mandatory compliance banner to customer page and admin page.
+2. Replaced planning document with phase-gated implementation ledger.
+
+Next implementation slice:
+1. Ticket gate controls (programmatic cutoff + manual contingency workflow).

@@ -151,6 +151,25 @@
     }
     .back-link:hover { color: #fff; }
 
+    /* ── Mandatory compliance banner ── */
+    .compliance-banner {
+      background: #fff7e6;
+      border-bottom: 2px solid #e8a020;
+      color: #5c3b00;
+      padding: 0.65rem 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      font-weight: 600;
+    }
+    .compliance-banner strong {
+      color: #7a1f1f;
+      margin-right: 0.25rem;
+    }
+    @media (min-width: 700px) {
+      .compliance-banner { font-size: 0.86rem; }
+    }
+
     /* ── Main Content ── */
     .admin-main {
       max-width: 960px;
@@ -1028,6 +1047,11 @@
       <button class="btn-ghost" id="logout-btn">Log Out</button>
     </div>
   </header>
+
+  <div class="compliance-banner" role="note" aria-label="Unofficial activity compliance notice">
+    <strong>Compliance Notice:</strong>
+    This is an Unofficial Activity / Private Organization. It is not part of the Department of Defense or any of its components and has no governmental status.
+  </div>
 
   <!-- ── Hero Panel ── -->
   <div class="admin-hero">
