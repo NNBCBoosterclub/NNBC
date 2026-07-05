@@ -1,0 +1,281 @@
+    /* -- Checkout Modal -- */
+    #checkout-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    #checkout-modal.open { display: flex; }
+
+    .modal-box {
+      background: var(--card-bg);
+      border-radius: 16px;
+      width: 94%;
+      max-width: 440px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #close-modal {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+    #close-modal:hover { color: var(--accent); }
+
+    .modal-body { padding: 1.25rem; }
+
+    .order-summary-list {
+      list-style: none;
+      margin-bottom: 0.75rem;
+    }
+    .order-summary-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .order-summary-list li:last-child { border-bottom: none; }
+
+    .order-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin: 0.75rem 0;
+      padding-top: 0.5rem;
+      border-top: 2px solid var(--primary);
+    }
+
+    .venmo-account-box {
+      background: #e8f4fd;
+      border: 1.5px solid #3d95ce;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin: 0.85rem 0;
+      text-align: center;
+    }
+    .v-label { font-size: 0.75rem; font-weight: 600; color: #3d95ce; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
+    .v-name  { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .v-handle { font-size: 0.9rem; color: #3d95ce; font-weight: 600; }
+
+    .venmo-warning {
+      background: #fff8e1;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.82rem;
+      color: #7a5a00;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    #cancel-checkout {
+      flex: 1;
+      padding: 0.7rem;
+      background: var(--bg);
+      color: var(--text-light);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    #cancel-checkout:hover { background: var(--border); }
+
+    #open-venmo-btn {
+      flex: 1;
+      padding: 0.7rem;
+      background: #3d95ce;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.12s;
+    }
+    #open-venmo-btn:hover { filter: brightness(1.08); }
+
+    /* -- Share button -- */
+    #share-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s;
+    }
+    #share-btn:hover { background: rgba(255,255,255,0.28); }
+
+    /* -- Admin link button -- */
+    #admin-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.75);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background 0.15s;
+    }
+    #admin-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+
+    /* -- Share Modal -- */
+    #share-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    #share-modal.open { display: flex; }
+
+    .share-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+
+    #close-share { background: none; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+    #close-share:hover { color: var(--accent); }
+
+    .share-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .share-desc {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .share-url-row {
+      display: flex;
+      width: 100%;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .share-url-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text-light);
+      background: var(--bg);
+      outline: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #copy-link-btn {
+      padding: 0.55rem 0.9rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: filter 0.12s;
+      flex-shrink: 0;
+    }
+    #copy-link-btn:hover { filter: brightness(1.1); }
+    #copy-link-btn.copied { background: var(--success); }
+
+    .share-divider {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .share-divider::before, .share-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    #share-qr-wrap {
+      background: #fff;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      display: inline-flex;
+    }
+
+    .share-qr-url {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      word-break: break-all;
+      text-align: center;
+      max-width: 280px;
+    }
+
+    #print-share-qr-btn {
+      width: 100%;
+      padding: 0.65rem;
+      background: var(--bg);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    #print-share-qr-btn:hover { background: var(--border); }
+

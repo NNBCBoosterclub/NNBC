@@ -1,0 +1,151 @@
+    /* -- Store status banner -- */
+    .store-status-banner {
+      background: #fff3cd;
+      border-bottom: 2px solid #ffc107;
+      padding: 0.6rem 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #7a5a00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .store-status-banner.restocked {
+      background: #edfaf1;
+      border-bottom-color: var(--success);
+      color: #1a7a40;
+    }
+
+    /* -- Mandatory compliance banner -- */
+    .compliance-banner {
+      background: #fff7e6;
+      border-bottom: 2px solid #e8a020;
+      color: #5c3b00;
+      padding: 0.65rem 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      font-weight: 600;
+    }
+    .compliance-banner strong {
+      color: #7a1f1f;
+      margin-right: 0.25rem;
+    }
+    @media (min-width: 700px) {
+      .compliance-banner { font-size: 0.86rem; }
+    }
+
+    /* -- Barcode Scanner button -- */
+    #scan-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.85);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background 0.15s;
+    }
+    #scan-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+
+    /* -- Barcode Scanner Modal -- */
+    #scanner-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    #scanner-modal.open { display: flex; }
+
+    .scanner-box {
+      background: var(--card-bg);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+      overflow: hidden;
+    }
+
+    .scanner-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #close-scanner {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0.1rem;
+    }
+    #close-scanner:hover { color: var(--accent); }
+
+    .scanner-body { padding: 1.25rem; }
+
+    #scanner-viewport {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+
+    /* ZXing / html5-qrcode injects a video element; style it to fill the box */
+    #scanner-viewport video {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+    }
+
+    #scanner-viewport #qr-shaded-region {
+      border-radius: 10px;
+    }
+
+    .scanner-status {
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-top: 0.85rem;
+      min-height: 1.4em;
+    }
+
+    .scanner-hint {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-light);
+      margin-top: 0.5rem;
+    }
+
+    #scanner-close-btn {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.7rem;
+      background: var(--bg);
+      color: var(--text-light);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    #scanner-close-btn:hover { background: var(--border); }
+  

@@ -1,0 +1,172 @@
+    /* -- Shop Search Bar -- */
+    .shop-search-wrap {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .shop-search-wrap input[type="search"] {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.4rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      background: var(--card-bg);
+      color: var(--text);
+      transition: border-color 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .shop-search-wrap input[type="search"]:focus { border-color: var(--primary); }
+    .shop-search-icon {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      color: var(--text-light);
+    }
+
+    /* -- Nutrition Facts button on product cards -- */
+    .nutrition-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      padding: 0.18rem 0.5rem;
+      cursor: pointer;
+      margin-top: 0.3rem;
+      transition: border-color 0.15s, color 0.15s;
+      align-self: center;
+    }
+    .nutrition-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* -- Nutrition Facts Modal -- */
+    #nutrition-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 350;
+      align-items: center;
+      justify-content: center;
+    }
+    #nutrition-modal.open { display: flex; }
+    .nutrition-box {
+      background: var(--card-bg);
+      border-radius: 14px;
+      width: 92%;
+      max-width: 330px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .nutrition-modal-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.85rem 1.1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #close-nutrition-modal {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0.1rem;
+    }
+    #close-nutrition-modal:hover { opacity: 0.8; }
+    .nutrition-panel {
+      padding: 1rem 1.1rem;
+      font-family: 'Arial Narrow', Arial, sans-serif;
+      font-size: 0.85rem;
+    }
+    .nf-title { font-size: 1.9rem; font-weight: 900; border-bottom: 2px solid #000; padding-bottom: 0.1rem; margin-bottom: 0.1rem; line-height: 1.1; }
+    .nf-serving { font-size: 0.82rem; margin-bottom: 0.1rem; }
+    .nf-calories-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 7px solid #000;
+      border-bottom: 3px solid #000;
+      padding: 0.2rem 0;
+      margin: 0.15rem 0;
+    }
+    .nf-cal-label { font-size: 0.9rem; font-weight: 700; }
+    .nf-cal-val   { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+    .nf-daily-note { font-size: 0.68rem; text-align: right; color: #444; margin-bottom: 0.25rem; border-bottom: 7px solid #000; padding-bottom: 0.25rem; }
+    .nf-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.16rem 0;
+      border-bottom: 1px solid #ccc;
+    }
+    .nf-row.thick { border-top: 3px solid #000; }
+    .nf-row.sub   { padding-left: 1rem; }
+    .nf-row:last-child { border-bottom: none; }
+    .nf-label { }
+    .nf-val   { font-weight: 700; }
+
+    /* -- Allergen section in nutrition modal -- */
+    .nf-allergy {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 3px solid #000;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .nf-allergy strong { display: block; margin-bottom: 0.1rem; }
+
+    /* -- Product card: inline nutrition summary -- */
+    .product-nutrition-inline {
+      font-size: 0.71rem;
+      color: var(--text-light);
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 0.1rem;
+    }
+
+    /* -- Product card: allergy badge -- */
+    .product-allergy-badge {
+      font-size: 0.68rem;
+      background: #fff8e1;
+      color: #7a5a00;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 0.12rem 0.45rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .product-allergy-badge:hover { background: #ffc107; color: #fff; }
+
+    /* -- Cart nutrition & allergy rows -- */
+    .cart-nutrition-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-bottom: 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-allergy-row {
+      background: #fff8e1;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.78rem;
+      color: #7a5a00;
+      margin-bottom: 0.5rem;
+      display: flex;
+      gap: 0.4rem;
+      align-items: flex-start;
+      line-height: 1.4;
+    }
+

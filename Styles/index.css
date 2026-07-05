@@ -1,0 +1,9 @@
+/* Composition manifest for storefront styles. Keep import order stable. */
+@import url("./index/layout.css");
+@import url("./index/products.css");
+@import url("./index/cart.css");
+@import url("./index/checkout-share.css");
+@import url("./index/account-modals.css");
+@import url("./index/responsive.css");
+@import url("./index/search-nutrition.css");
+@import url("./index/status-scanner.css");

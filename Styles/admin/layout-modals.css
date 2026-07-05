@@ -1,0 +1,209 @@
+    /* -- Responsive -- */
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .admin-main { padding: 1.5rem 1rem; }
+      .product-row { flex-wrap: wrap; }
+      .row-actions { order: 3; }
+      .stock-section { order: 2; }
+      .row-name { font-size: 1rem; }
+      .row-meta { font-size: 0.82rem; }
+    }
+
+    @media (max-width: 500px) {
+      header.admin-header { padding: 0 0.75rem; height: 56px; }
+      .header-logo { font-size: 1rem; }
+      .admin-main { padding: 1rem 0.75rem; }
+      .link-text { display: none; }
+      .card { padding: 1rem; }
+      .admin-menu-toolbar { top: 56px; margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+      .form-group label { font-size: 0.88rem; }
+      .form-group input[type="text"],
+      .form-group input[type="number"],
+      .form-group select { font-size: 1rem; padding: 0.7rem 0.8rem; }
+      .btn-save, .btn-cancel { font-size: 1rem; padding: 0.75rem 1.1rem; }
+      .btn-edit, .btn-delete { padding: 0.45rem 0.85rem; font-size: 0.85rem; }
+      .row-visual { width: 40px; height: 40px; font-size: 1.4rem; }
+      .section-title { font-size: 1.1rem; }
+    }
+
+    /* -- Admin Hero Panel -- */
+    .admin-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #244e7c 100%);
+      color: #fff;
+      padding: 2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .admin-hero-info { display: flex; align-items: center; gap: 0.85rem; }
+    .admin-hero-logo { font-size: 2.2rem; flex-shrink: 0; }
+    .admin-hero-title { font-size: 1.4rem; font-weight: 700; }
+    .admin-hero-sub { font-size: 0.88rem; opacity: 0.8; margin-top: 0.2rem; }
+    .admin-hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .hero-btn {
+      padding: 0.65rem 1.2rem;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .hero-btn:hover { background: rgba(255,255,255,0.28); }
+    .hero-btn.accent { background: var(--accent); border-color: var(--accent); }
+    .hero-btn.accent:hover { filter: brightness(1.1); background: var(--accent); }
+
+    @media (max-width: 500px) {
+      .admin-hero { padding: 1.25rem 0.75rem; gap: 1rem; }
+      .admin-hero-title { font-size: 1.15rem; }
+      .hero-btn { padding: 0.55rem 0.9rem; font-size: 0.82rem; }
+    }
+
+    /* -- Add Item Modal -- */
+    #add-item-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+      overflow-y: auto;
+    }
+    #add-item-modal.open { display: flex; }
+
+    .item-modal-box {
+      background: var(--card-bg);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      overflow: hidden;
+      margin: auto;
+    }
+    .item-modal-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1rem 1.25rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item-modal-body { padding: 1.5rem; }
+
+    .btn-close-modal {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0.2rem;
+    }
+    .btn-close-modal:hover { color: var(--accent); }
+
+    /* -- Admin Menu Toolbar -- */
+    .admin-menu-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      position: sticky;
+      top: 64px;
+      z-index: 90;
+      background: var(--card-bg);
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding: 0.75rem 1.5rem;
+    }
+    .admin-search-wrap { position: relative; }
+    .admin-search-wrap input[type="search"] {
+      width: 100%;
+      padding: 0.6rem 0.9rem 0.6rem 2.2rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .admin-search-wrap input[type="search"]:focus { border-color: var(--primary); background: #fff; }
+    .admin-search-icon {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+    .admin-cat-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .admin-cat-tabs::-webkit-scrollbar { display: none; }
+    .admin-cat-btn {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .admin-cat-btn:hover, .admin-cat-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .admin-menu-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    /* -- Nutrition Facts collapsible in item form -- */
+    .nutrition-toggle-btn {
+      width: 100%;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .nutrition-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .nutrition-fields { display: none; margin-top: 0.6rem; }
+    .nutrition-fields.open { display: block; }
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 0.75rem;
+    }
+    .nutrition-hint { font-size: 0.75rem; color: var(--text-light); margin-top: 0.4rem; }
+    @media (max-width: 500px) { .nutrition-grid { grid-template-columns: 1fr; } }
+
