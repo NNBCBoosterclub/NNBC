@@ -28,6 +28,62 @@
     .btn-status.normal    { background: var(--bg); color: var(--text-light); border: 1.5px solid var(--border); }
     .btn-status.normal:hover { background: var(--border); color: var(--text); }
 
+    .receipt-section-wrap { margin-top: 1.25rem; }
+
+    .receipt-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .receipt-section-hint {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .receipt-save-msg {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--success);
+      min-height: 1.2em;
+    }
+
+    .receipt-history-wrap {
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1.25rem;
+    }
+
+    .receipt-history-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+
+    .receipt-img-preview {
+      display: none;
+      max-width: 180px;
+      max-height: 180px;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      border: 1.5px solid var(--border);
+    }
+
+    .receipt-img-preview.visible { display: block; }
+
+    .empty-inline-note {
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    .empty-inline-note-sm {
+      color: var(--text-light);
+      font-size: 0.88rem;
+    }
+
     /* -- Bulk Restock Grid -- */
     .bulk-restock-grid {
       display: grid;

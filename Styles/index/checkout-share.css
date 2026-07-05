@@ -41,6 +41,22 @@
 
     .modal-body { padding: 1.25rem; }
 
+    .checkout-review-note {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .checkout-nutrition-summary {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      padding: 0.4rem 0 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.5rem;
+    }
+
     .order-summary-list {
       list-style: none;
       margin-bottom: 0.75rem;

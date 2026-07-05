@@ -48,25 +48,6 @@
     }
     .back-link:hover { color: #fff; }
 
-    /* -- Mandatory compliance banner -- */
-    .compliance-banner {
-      background: #fff7e6;
-      border-bottom: 2px solid #e8a020;
-      color: #5c3b00;
-      padding: 0.65rem 1rem;
-      text-align: center;
-      font-size: 0.82rem;
-      line-height: 1.35;
-      font-weight: 600;
-    }
-    .compliance-banner strong {
-      color: #7a1f1f;
-      margin-right: 0.25rem;
-    }
-    @media (min-width: 700px) {
-      .compliance-banner { font-size: 0.86rem; }
-    }
-
     /* -- Main Content -- */
     .admin-main {
       max-width: 960px;
@@ -81,6 +62,51 @@
       border-bottom: 3px solid var(--accent);
       padding-bottom: 0.4rem;
       display: inline-block;
+    }
+
+    .section-title-spaced { margin-top: 2rem; }
+
+    .admin-copy {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+
+    .admin-copy-tight { margin-bottom: 0.85rem; }
+
+    .admin-copy-small {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .admin-card-spaced { margin-top: 1rem; }
+
+    .token-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .token-link {
+      color: var(--primary);
+    }
+
+    .token-input {
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-danger-compact {
+      padding: 0.55rem 0.9rem;
+      font-size: 0.85rem;
+    }
+
+    .token-status {
+      font-size: 0.85rem;
+      margin-top: 0.4rem;
+      min-height: 1.2em;
     }
 
     .card {

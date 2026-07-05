@@ -13,7 +13,7 @@
 <body>
 
 <!-- ══════════════════════ SETUP SCREEN (first run) ══════════════════════ -->
-<div id="setup-screen" class="screen" style="display:none">
+<div id="setup-screen" class="screen">
   <div class="auth-box">
     <div class="logo">🔒</div>
     <h1>Create Admin PIN</h1>
@@ -28,7 +28,7 @@
 </div>
 
 <!-- ══════════════════════ LOGIN SCREEN ══════════════════════ -->
-<div id="login-screen" class="screen" style="display:none">
+<div id="login-screen" class="screen">
   <div class="auth-box">
     <div class="logo">🛒</div>
     <h1>Admin Login</h1>
@@ -79,7 +79,7 @@
     <!-- ── Store Status ── -->
     <h2 class="section-title">📦 Store Status</h2>
     <div class="card" id="store-status-card">
-      <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:0.85rem;">
+      <p class="admin-copy admin-copy-tight">
         Show customers the current status of your inventory. The message appears as a banner on the store page.
       </p>
       <div id="admin-status-display" class="status-display-row">No active status message.</div>
@@ -91,37 +91,37 @@
     </div>
 
     <!-- ── Receipt Upload & Bulk Restock ── -->
-    <h2 class="section-title" style="margin-top:2rem">📄 Receipt Upload &amp; Bulk Restock</h2>
+    <h2 class="section-title section-title-spaced">📄 Receipt Upload &amp; Bulk Restock</h2>
     <div class="card">
-      <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:1rem;">
+      <p class="admin-copy">
         Upload a receipt from purchasing new inventory. Enter the quantity received for each item, then apply the restock to automatically update stock counts.
       </p>
       <div class="form-grid">
         <div class="form-group">
-          <label for="receipt-image">Receipt Photo <span style="font-weight:400;">(optional, max 10 MB)</span></label>
+          <label for="receipt-image">Receipt Photo <span class="field-optional">(optional, max 10 MB)</span></label>
           <input type="file" id="receipt-image" accept="image/*" />
           <div class="image-preview-wrap">
-            <img id="receipt-img-preview" alt="Receipt preview" style="display:none;max-width:180px;max-height:180px;border-radius:8px;margin-top:0.5rem;border:1.5px solid var(--border);" />
-            <button type="button" class="btn-clear-img" id="clear-receipt-img-btn" style="display:none;">✕ Remove</button>
+            <img id="receipt-img-preview" class="receipt-img-preview" alt="Receipt preview" />
+            <button type="button" class="btn-clear-img" id="clear-receipt-img-btn">✕ Remove</button>
           </div>
         </div>
         <div class="form-group">
-          <label for="receipt-notes">Notes <span style="font-weight:400;">(optional)</span></label>
+          <label for="receipt-notes">Notes <span class="field-optional">(optional)</span></label>
           <input type="text" id="receipt-notes" placeholder="e.g. Walmart, May 8 2026" maxlength="120" />
         </div>
       </div>
-      <div style="margin-top:1.25rem;">
-        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.5rem;color:var(--primary);">📦 Items Received</h3>
-        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:0.75rem;">Enter the quantity received for each item. Leave blank or 0 to skip.</p>
+      <div class="receipt-section-wrap">
+        <h3 class="receipt-section-title">📦 Items Received</h3>
+        <p class="receipt-section-hint">Enter the quantity received for each item. Leave blank or 0 to skip.</p>
         <div id="bulk-restock-grid" class="bulk-restock-grid"></div>
       </div>
-      <div class="form-actions" style="margin-top:1.25rem;">
+      <div class="form-actions">
         <button type="button" class="btn-save" id="apply-bulk-restock-btn">✅ Apply Restock</button>
       </div>
-      <div id="receipt-save-msg" style="margin-top:0.5rem;font-size:0.85rem;color:var(--success);min-height:1.2em;"></div>
+      <div id="receipt-save-msg" class="receipt-save-msg"></div>
       <!-- Receipt History -->
-      <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem;">
-        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.75rem;color:var(--primary);">📋 Receipt History</h3>
+      <div class="receipt-history-wrap">
+        <h3 class="receipt-history-title">📋 Receipt History</h3>
         <div id="receipt-history-list"></div>
       </div>
     </div>
@@ -143,9 +143,9 @@
     </div>
 
     <!-- ── Orders ── -->
-    <h2 class="section-title" id="orders-section-title" style="margin-top:2rem">📊 Order History</h2>
+    <h2 class="section-title section-title-spaced" id="orders-section-title">📊 Order History</h2>
     <div class="card">
-      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">
+      <p class="admin-copy-small">
         Orders placed via this device are recorded here. Cash orders can be marked as paid once collected.
       </p>
       <div class="orders-stats" id="orders-stats"></div>
@@ -160,9 +160,9 @@
     </div>
 
     <!-- ── Settings ── -->
-    <h2 class="section-title" style="margin-top:2rem">⚙️ Settings</h2>
+    <h2 class="section-title section-title-spaced">⚙️ Settings</h2>
     <div class="card">
-      <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:1rem;">Change the admin PIN used to access this page.</p>
+      <p class="admin-copy">Change the admin PIN used to access this page.</p>
       <div class="pin-row">
         <input type="password" id="new-pin" placeholder="New PIN" maxlength="20" />
         <input type="password" id="new-pin-confirm" placeholder="Confirm new PIN" maxlength="20" />
@@ -172,24 +172,22 @@
     </div>
 
     <!-- ── GitHub Sync ── -->
-    <div class="card" style="margin-top:1rem;">
-      <p style="font-size:0.9rem;font-weight:700;color:var(--primary);margin-bottom:0.4rem;">🌐 GitHub Sync Token</p>
-      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.75rem;">
+    <div class="card admin-card-spaced">
+      <p class="token-title">🌐 GitHub Sync Token</p>
+      <p class="admin-copy-small">
         Products are stored in <code>products.json</code> in this repository so every visitor sees the same catalog.
         To publish changes you make here, create a
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer"
-           style="color:var(--primary);">fine-grained Personal Access Token</a>
+           class="token-link">fine-grained Personal Access Token</a>
         with <strong>Contents: Read and write</strong> access to the <strong>NNBCBoosterclub/NNBC</strong> repository,
         then paste it below. The token is stored only in this browser and is never shared.
       </p>
       <div class="pin-row">
-        <input type="password" id="github-token-input" placeholder="github_pat_…" autocomplete="off"
-               style="font-family:monospace;letter-spacing:0.05em;" />
+        <input type="password" id="github-token-input" class="token-input" placeholder="github_pat_…" autocomplete="off" />
         <button type="button" class="btn-save" id="save-token-btn">Save Token</button>
-        <button type="button" class="btn-danger" id="clear-token-btn"
-                style="padding:0.55rem 0.9rem;font-size:0.85rem;">Clear</button>
+        <button type="button" class="btn-danger btn-danger-compact" id="clear-token-btn">Clear</button>
       </div>
-      <div id="token-status" style="font-size:0.85rem;margin-top:0.4rem;min-height:1.2em;"></div>
+      <div id="token-status" class="token-status"></div>
     </div>
 
     <!-- ── Danger Zone ── -->
@@ -234,7 +232,7 @@
               <option value="Other">Other</option>
             </select>
           </div>
-          <div class="form-group" id="f-subcategory-group" style="display:none">
+          <div class="form-group" id="f-subcategory-group">
             <label for="f-subcategory">Subcategory</label>
             <select id="f-subcategory">
               <option value="">— Select subcategory —</option>
@@ -268,7 +266,7 @@
           </div>
           <div class="form-group full">
             <button type="button" class="nutrition-toggle-btn" id="nutrition-toggle-btn">
-              <span>🥗 Nutrition Facts <span style="font-weight:400;">(optional)</span></span>
+              <span>🥗 Nutrition Facts <span class="field-optional">(optional)</span></span>
               <span id="nutrition-toggle-icon">▼</span>
             </button>
             <div class="nutrition-fields" id="nutrition-fields">
@@ -322,14 +320,14 @@
             </div>
           </div>
           <div class="form-group full">
-            <label for="f-allergies">⚠️ Allergy / Ingredient Warning <span style="font-weight:400;">(optional)</span></label>
+            <label for="f-allergies">⚠️ Allergy / Ingredient Warning <span class="field-optional">(optional)</span></label>
             <input type="text" id="f-allergies" placeholder="e.g. Contains: Milk, Wheat, Soy. May contain tree nuts." maxlength="200" />
-            <span style="font-size:0.75rem;color:var(--text-light);margin-top:0.2rem;display:block;">Displayed as an allergen warning on product cards and at checkout. Leave blank if no known allergens.</span>
+            <span class="form-help-text">Displayed as an allergen warning on product cards and at checkout. Leave blank if no known allergens.</span>
           </div>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-save" id="form-submit-btn">Add Item</button>
-          <button type="button" class="btn-cancel" id="cancel-edit-btn" style="display:none">Cancel Edit</button>
+          <button type="button" class="btn-cancel" id="cancel-edit-btn">Cancel Edit</button>
         </div>
       </form>
     </div>
@@ -1043,13 +1041,13 @@
         const info = document.createElement("div");
         info.className = "row-info";
         const subcatBadge = p.subcategory
-          ? ` &nbsp;·&nbsp; <span class="cat-badge" style="background:rgba(232,160,32,0.15);color:#8a5e00;">${escHtml(p.subcategory)}</span>`
+            ? ` &nbsp;·&nbsp; <span class="cat-badge cat-badge-subcategory">${escHtml(p.subcategory)}</span>`
           : "";
         const allergyBadge = p.allergies
-          ? ` &nbsp;·&nbsp; <span class="cat-badge" style="background:#fff8e1;color:#7a5a00;">⚠️ Allergens</span>`
+            ? ` &nbsp;·&nbsp; <span class="cat-badge cat-badge-allergy">⚠️ Allergens</span>`
           : "";
         const nutritionBadge = p.nutrition
-          ? ` &nbsp;·&nbsp; <span class="cat-badge" style="background:#edfaf1;color:var(--success);">🥗 Nutrition</span>`
+            ? ` &nbsp;·&nbsp; <span class="cat-badge cat-badge-nutrition">🥗 Nutrition</span>`
           : "";
         info.innerHTML = `
           <div class="row-name">${escHtml(p.name)}</div>
@@ -1408,8 +1406,8 @@
       const dataUrl = await resizeAndEncode(file);
       pendingReceiptImageUrl = dataUrl;
       $("receipt-img-preview").src = dataUrl;
-      $("receipt-img-preview").style.display = "block";
-      $("clear-receipt-img-btn").style.display = "inline";
+      $("receipt-img-preview").classList.add("visible");
+      $("clear-receipt-img-btn").classList.add("visible");
     } catch (err) {
       showToast(err.message || "Could not load image.", true);
       $("receipt-image").value = "";
@@ -1420,8 +1418,8 @@
     pendingReceiptImageUrl = null;
     $("receipt-image").value = "";
     $("receipt-img-preview").src = "";
-    $("receipt-img-preview").style.display = "none";
-    $("clear-receipt-img-btn").style.display = "none";
+    $("receipt-img-preview").classList.remove("visible");
+    $("clear-receipt-img-btn").classList.remove("visible");
   });
 
   // Build the bulk restock grid from current product list
@@ -1430,7 +1428,7 @@
     const grid  = $("bulk-restock-grid");
     grid.innerHTML = "";
     if (items.length === 0) {
-      grid.innerHTML = `<p style="color:var(--text-light);font-size:0.9rem;">No items on the menu yet.</p>`;
+      grid.innerHTML = `<p class="empty-inline-note">No items on the menu yet.</p>`;
       return;
     }
     items.forEach(p => {
@@ -1557,8 +1555,8 @@
     $("receipt-notes").value = "";
     $("receipt-image").value = "";
     $("receipt-img-preview").src = "";
-    $("receipt-img-preview").style.display = "none";
-    $("clear-receipt-img-btn").style.display = "none";
+    $("receipt-img-preview").classList.remove("visible");
+    $("clear-receipt-img-btn").classList.remove("visible");
     pendingReceiptImageUrl = null;
     buildBulkRestockGrid();
 
@@ -1578,7 +1576,7 @@
     const list      = loadReceipts();
     const container = $("receipt-history-list");
     if (list.length === 0) {
-      container.innerHTML = `<p style="color:var(--text-light);font-size:0.88rem;">No receipts uploaded yet.</p>`;
+      container.innerHTML = `<p class="empty-inline-note-sm">No receipts uploaded yet.</p>`;
       return;
     }
     container.innerHTML = "";

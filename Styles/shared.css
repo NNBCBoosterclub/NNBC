@@ -16,6 +16,9 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Shared utility primitives */
+.is-hidden { display: none !important; }
+
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg);
@@ -25,6 +28,27 @@ body {
 
 /* Prevent double-tap zoom without disabling accessibility */
 button, a { touch-action: manipulation; }
+
+/* Shared compliance banner used in both storefront and admin */
+.compliance-banner {
+  background: #fff7e6;
+  border-bottom: 2px solid #e8a020;
+  color: #5c3b00;
+  padding: 0.65rem 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.compliance-banner strong {
+  color: #7a1f1f;
+  margin-right: 0.25rem;
+}
+
+@media (min-width: 700px) {
+  .compliance-banner { font-size: 0.86rem; }
+}
 
 /* Shared toast used by both storefront and admin pages */
 #toast {

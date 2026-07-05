@@ -38,6 +38,21 @@
       font-weight: 600;
     }
 
+    .cat-badge-subcategory {
+      background: rgba(232,160,32,0.15);
+      color: #8a5e00;
+    }
+
+    .cat-badge-allergy {
+      background: #fff8e1;
+      color: #7a5a00;
+    }
+
+    .cat-badge-nutrition {
+      background: #edfaf1;
+      color: var(--success);
+    }
+
     /* -- Stock badge + restock -- */
     .stock-section {
       display: flex;

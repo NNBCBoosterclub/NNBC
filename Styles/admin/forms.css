@@ -90,3 +90,19 @@
     }
     .btn-cancel:hover { background: var(--border); color: var(--text); }
 
+    .field-optional {
+      font-weight: 400;
+    }
+
+    .form-help-text {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 0.2rem;
+      display: block;
+    }
+
+    #f-subcategory-group,
+    #cancel-edit-btn {
+      display: none;
+    }
+

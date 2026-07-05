@@ -7,6 +7,11 @@
       padding: 1.5rem;
     }
 
+    #setup-screen,
+    #login-screen {
+      display: none;
+    }
+
     .auth-box {
       background: var(--card-bg);
       border-radius: 16px;

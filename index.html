@@ -45,7 +45,7 @@
 </div>
 
 <!-- ══════════════════════ STORE STATUS BANNER ══════════════════════ -->
-<div id="store-status-banner" class="store-status-banner" style="display:none" aria-live="polite"></div>
+<div id="store-status-banner" class="store-status-banner is-hidden" aria-live="polite"></div>
 
 <!-- ══════════════════════ MAIN ══════════════════════ -->
 <main>
@@ -67,8 +67,8 @@
   </div>
   <div class="cart-items" id="cart-items"></div>
   <div class="cart-footer">
-    <div id="cart-nutrition-summary" class="cart-nutrition-row" style="display:none"></div>
-    <div id="cart-allergy-warning" class="cart-allergy-row" style="display:none"></div>
+    <div id="cart-nutrition-summary" class="cart-nutrition-row is-hidden"></div>
+    <div id="cart-allergy-warning" class="cart-allergy-row is-hidden"></div>
     <div class="cart-total-row">
       <span>Total</span>
       <span id="cart-total">$0.00</span>
@@ -92,14 +92,14 @@
         <span class="buyer-name" id="checkout-buyer-name">Guest</span>
         <button type="button" id="change-name-btn">✏️ Change</button>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.75rem;">Review your order before paying.</p>
+      <p class="checkout-review-note">Review your order before paying.</p>
       <ul class="order-summary-list" id="modal-order-list"></ul>
       <div class="order-total-row">
         <span>Total Due</span>
         <span id="modal-total"></span>
       </div>
-      <div id="checkout-nutrition-summary" style="display:none;font-size:0.82rem;color:var(--text-light);padding:0.4rem 0 0.5rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;"></div>
-      <div id="checkout-allergy-warning" class="venmo-warning" style="display:none;"></div>
+      <div id="checkout-nutrition-summary" class="checkout-nutrition-summary is-hidden"></div>
+      <div id="checkout-allergy-warning" class="venmo-warning is-hidden"></div>
       <div class="venmo-account-box">
         <div class="v-label">Pay this Venmo account</div>
         <div class="v-name" id="venmo-display-name"></div>
@@ -147,11 +147,11 @@
 </div>
 
 <!-- Hidden print area (only visible when printing) -->
-<div id="print-area" style="display:none;">
+<div id="print-area" class="is-hidden">
   <h1>🛒 NNBC Snack Bar</h1>
   <canvas id="print-qr-canvas"></canvas>
   <p>Scan to browse the menu &amp; pay with Venmo</p>
-  <p id="print-url-text" style="font-size:0.85rem;color:#666;"></p>
+  <p id="print-url-text" class="print-url-text"></p>
 </div>
 
 <!-- ══════════════════════ AUTH MODAL (Login / Register) ══════════════════════ -->
@@ -218,7 +218,7 @@
         <div class="profile-img-actions">
           <label class="btn-upload-avatar" tabindex="0" role="button">
             📷 Change Photo
-            <input type="file" id="profile-img-upload" accept="image/*" style="display:none" />
+            <input type="file" id="profile-img-upload" class="profile-img-upload-input" accept="image/*" />
           </label>
           <button class="btn-remove-avatar" id="btn-remove-avatar">✕ Remove</button>
         </div>
@@ -268,7 +268,7 @@
           <div class="nutrition-chip-value" id="pn-fat">—</div>
         </div>
       </div>
-      <div style="font-size:0.75rem;color:var(--text-light);margin-top:0.6rem;">Based on items with nutrition info, last 7 days.</div>
+      <div class="profile-weekly-note">Based on items with nutrition info, last 7 days.</div>
     </div>
     <!-- Order history -->
     <div class="profile-section">
@@ -386,7 +386,7 @@
     { id: 16, name: "Hot Dog",        emoji: "🌭", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 17, name: "Nachos",         emoji: "🧀", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 18, name: "Pizza Slice",    emoji: "🍕", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
-    { id: 19, name: "Spirit Wear",    emoji: "👕", price: 10.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
+    { id: 19, name: "Jersey Friday | Business Casual",    emoji: "👕", price: 5.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 20, name: "Miscellaneous",  emoji: "🛍️", price: 1.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
   ];
 
@@ -651,7 +651,7 @@
         </div>`;
       });
     } else {
-      html += `<div style="padding:0.75rem 0;color:#555;font-size:0.85rem;">Nutrition information not available for this item.</div>`;
+      html += `<div class="nutrition-empty-note">Nutrition information not available for this item.</div>`;
     }
 
     // Allergen section (always shown if present, regardless of nutrition data)
@@ -930,9 +930,9 @@
         if (hasCal)  parts.push(`🔥 ${totalCal} cal`);
         if (hasProt) parts.push(`💪 ${totalProt}g protein`);
         nutEl.innerHTML = `<span>Cart nutrition total</span><span>${escHtml(parts.join(' · '))}</span>`;
-        nutEl.style.display = "flex";
+        nutEl.classList.remove("is-hidden");
       } else {
-        nutEl.style.display = "none";
+        nutEl.classList.add("is-hidden");
       }
     }
 
@@ -942,9 +942,9 @@
       const allergens = cartAllergens();
       if (count > 0 && allergens.length > 0) {
         algEl.innerHTML = `<span>⚠️</span><span><strong>Allergens in cart:</strong> ${escHtml(allergens.join(', '))}</span>`;
-        algEl.style.display = "flex";
+        algEl.classList.remove("is-hidden");
       } else {
-        algEl.style.display = "none";
+        algEl.classList.add("is-hidden");
       }
     }
 
@@ -1067,10 +1067,9 @@
         if (hasCal)  parts.push(`🔥 ${totalCal} cal`);
         if (hasProt) parts.push(`💪 ${totalProt}g protein`);
         checkoutNutEl.innerHTML = `<span>Order nutrition total:</span><span>${escHtml(parts.join(' · '))}</span>`;
-        checkoutNutEl.style.display = "flex";
-        checkoutNutEl.style.justifyContent = "space-between";
+        checkoutNutEl.classList.remove("is-hidden");
       } else {
-        checkoutNutEl.style.display = "none";
+        checkoutNutEl.classList.add("is-hidden");
       }
     }
 
@@ -1080,9 +1079,9 @@
       const allergens = cartAllergens();
       if (allergens.length > 0) {
         checkoutAlgEl.innerHTML = `<span>⚠️</span><span><strong>Allergen notice:</strong> Your order contains items with: ${escHtml(allergens.join(', '))}</span>`;
-        checkoutAlgEl.style.display = "flex";
+        checkoutAlgEl.classList.remove("is-hidden");
       } else {
-        checkoutAlgEl.style.display = "none";
+        checkoutAlgEl.classList.add("is-hidden");
       }
     }
 
@@ -1306,7 +1305,7 @@
       const p      = mp.product;
       const imgUrl = safeImageUrl(p.imageUrl);
       const visual = imgUrl
-        ? `<img src="${p.imageUrl}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;" alt="${escHtml(p.name)}" />`
+        ? `<img src="${p.imageUrl}" class="profile-most-purchased-img" alt="${escHtml(p.name)}" />`
         : escHtml(p.emoji || "🛍️");
       mpEl.innerHTML = `
         <div class="profile-most-purchased">
@@ -1342,7 +1341,7 @@
         row.innerHTML  = `
           <div class="profile-order-id">${escHtml(order.id)}</div>
           <div class="profile-order-info">
-            <div style="font-weight:700;font-size:0.85rem;">${escHtml(date)}</div>
+            <div class="profile-order-date">${escHtml(date)}</div>
             <div class="profile-order-items">${escHtml(itemsStr)}</div>
           </div>
           <div class="profile-order-total">${formatPrice(order.total)}</div>`;
@@ -1650,9 +1649,9 @@
     }, err => {
       if (err) { console.error("QR print generation failed:", err); return; }
       getById("print-url-text").textContent = url;
-      getById("print-area").style.display = "flex";
+      getById("print-area").classList.remove("is-hidden");
       window.print();
-      setTimeout(() => { getById("print-area").style.display = "none"; }, 500);
+      setTimeout(() => { getById("print-area").classList.add("is-hidden"); }, 500);
     });
   });
 
@@ -1843,10 +1842,9 @@
     const banner = getById("store-status-banner");
     if (!banner) return;
     if (!status || !status.state || status.state === "normal") {
-      banner.style.display = "none";
+      banner.className = "store-status-banner is-hidden";
       return;
     }
-    banner.style.display = "flex";
     if (status.state === "ordered") {
       banner.className = "store-status-banner";
       banner.innerHTML = `📦 <strong>Items have been ordered</strong> — Restocking in progress, check back soon!`;

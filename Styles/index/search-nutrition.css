@@ -121,6 +121,12 @@
     }
     .nf-allergy strong { display: block; margin-bottom: 0.1rem; }
 
+    .nutrition-empty-note {
+      padding: 0.75rem 0;
+      color: #555;
+      font-size: 0.85rem;
+    }
+
     /* -- Product card: inline nutrition summary -- */
     .product-nutrition-inline {
       font-size: 0.71rem;
