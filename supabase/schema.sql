@@ -193,6 +193,77 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.menu_items;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 
 -- ─────────────────────────────────────────────────────────────
+--  ADMIN AUTH (single shared PIN, verified server-side)
+--
+--  Replaces the old per-browser localStorage PIN, which let anyone who
+--  opened admin.html with no locally-saved PIN self-provision themselves
+--  as admin. Now there is exactly one PIN, stored (hashed) in this table,
+--  and the table itself is not directly readable or writable by the anon
+--  key — only through the two SECURITY DEFINER functions below, so the
+--  hash is never exposed to the client and can't be overwritten directly
+--  via the REST API either.
+-- ─────────────────────────────────────────────────────────────
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS public.admin_auth (
+  id       INT PRIMARY KEY DEFAULT 1,
+  pin_hash TEXT NOT NULL
+);
+
+ALTER TABLE public.admin_auth ENABLE ROW LEVEL SECURITY;
+-- Intentionally no SELECT/INSERT/UPDATE/DELETE policies: RLS + revoked
+-- grants below mean nobody can touch this table directly, only via the
+-- functions (which run as the function owner and bypass RLS).
+REVOKE ALL ON public.admin_auth FROM anon, authenticated;
+
+-- Seed a default PIN so the panel isn't locked out on first deploy.
+-- Default PIN is "1234" — change it immediately from Admin → Settings
+-- once you've logged in once.
+INSERT INTO public.admin_auth (id, pin_hash)
+VALUES (1, encode(digest('nnbc_admin_salt_v1:1234', 'sha256'), 'hex'))
+ON CONFLICT (id) DO NOTHING;
+
+-- Verify a PIN attempt. Returns true/false, never reveals the hash.
+CREATE OR REPLACE FUNCTION public.verify_admin_pin(attempt TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  stored TEXT;
+BEGIN
+  SELECT pin_hash INTO stored FROM public.admin_auth WHERE id = 1;
+  IF stored IS NULL THEN
+    RETURN false;
+  END IF;
+  RETURN stored = encode(digest('nnbc_admin_salt_v1:' || attempt, 'sha256'), 'hex');
+END;
+$$;
+
+-- Change the PIN. Requires the current PIN to succeed; returns true/false.
+CREATE OR REPLACE FUNCTION public.set_admin_pin(old_pin TEXT, new_pin TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.verify_admin_pin(old_pin) THEN
+    RETURN false;
+  END IF;
+  UPDATE public.admin_auth
+  SET pin_hash = encode(digest('nnbc_admin_salt_v1:' || new_pin, 'sha256'), 'hex')
+  WHERE id = 1;
+  RETURN true;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.verify_admin_pin(TEXT)      TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.set_admin_pin(TEXT, TEXT)   TO anon, authenticated;
+
+-- ─────────────────────────────────────────────────────────────
 --  STORAGE BUCKETS
 --  Create in Supabase Dashboard → Storage → New Bucket, or run:
 --    INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);

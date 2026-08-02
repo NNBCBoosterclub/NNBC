@@ -12,21 +12,6 @@
 </head>
 <body>
 
-<!-- ══════════════════════ SETUP SCREEN (first run) ══════════════════════ -->
-<div id="setup-screen" class="screen">
-  <div class="auth-box">
-    <div class="logo">🔒</div>
-    <h1>Create Admin PIN</h1>
-    <p class="subtitle">Set a PIN to protect the admin panel. You'll need it every time you log in.</p>
-    <label for="setup-pin">New PIN</label>
-    <input type="password" id="setup-pin" placeholder="••••" maxlength="20" autocomplete="new-password" />
-    <label for="setup-pin-confirm">Confirm PIN</label>
-    <input type="password" id="setup-pin-confirm" placeholder="••••" maxlength="20" autocomplete="new-password" />
-    <button class="btn-primary" id="setup-btn">Create PIN &amp; Enter Admin</button>
-    <div class="error-msg" id="setup-error"></div>
-  </div>
-</div>
-
 <!-- ══════════════════════ LOGIN SCREEN ══════════════════════ -->
 <div id="login-screen" class="screen">
   <div class="auth-box">
@@ -162,10 +147,11 @@
     <!-- ── Settings ── -->
     <h2 class="section-title section-title-spaced">⚙️ Settings</h2>
     <div class="card">
-      <p class="admin-copy">Change the admin PIN used to access this page.</p>
+      <p class="admin-copy">Change the admin PIN used to access this page. This PIN is shared and stored in the backend — anyone who knows it can change it.</p>
       <div class="pin-row">
-        <input type="password" id="new-pin" placeholder="New PIN" maxlength="20" />
-        <input type="password" id="new-pin-confirm" placeholder="Confirm new PIN" maxlength="20" />
+        <input type="password" id="current-pin" placeholder="Current PIN" maxlength="20" autocomplete="current-password" />
+        <input type="password" id="new-pin" placeholder="New PIN" maxlength="20" autocomplete="new-password" />
+        <input type="password" id="new-pin-confirm" placeholder="Confirm new PIN" maxlength="20" autocomplete="new-password" />
         <button type="button" class="btn-save" id="change-pin-btn">Update PIN</button>
       </div>
       <div class="error-msg" id="pin-change-error"></div>
@@ -358,7 +344,6 @@
   // Storage keys used by the admin experience.
   // Renaming these keys disconnects this page from existing saved browser data.
   const STORAGE_KEY  = "nnbc_products";
-  const PIN_KEY      = "nnbc_admin_pin";
   const SESSION_KEY  = "nnbc_admin_auth";
   // Image settings affect compression quality and max upload size.
   const IMAGE_QUALITY  = 0.82;
@@ -395,44 +380,27 @@
   }
 
   // ─────────────────────────────────────────────────────
-  //  PIN (hashed with Web Crypto)
+  //  PIN (single shared PIN, verified server-side via Supabase RPC)
   // ─────────────────────────────────────────────────────
-  // PIN hashes are salted and stored locally in browser storage.
-  // There is no server-side auth for this static site.
-  async function hashPin(pin) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode("nnbc_salt_2024:" + pin);
-    const buf  = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-  }
-
-  async function checkPin(pin) {
-    const stored = localStorage.getItem(PIN_KEY);
-    if (!stored) return false;
-    return (await hashPin(pin)) === stored;
-  }
-
-  async function setPin(pin) {
-    localStorage.setItem(PIN_KEY, await hashPin(pin));
-  }
+  // The PIN itself lives in the backend (see supabase/schema.sql —
+  // admin_auth table + verify_admin_pin/set_admin_pin functions).
+  // Nothing here can read or set the PIN directly; every check is a
+  // round-trip to the server so there is no local "first run creates
+  // an admin" path anymore. SESSION_KEY is just a per-tab convenience
+  // flag so you're not re-entering the PIN on every click.
 
   // ─────────────────────────────────────────────────────
   //  ROUTING
   // ─────────────────────────────────────────────────────
-  // Determines which screen should be visible: setup, login, or admin panel.
+  // Determines which screen should be visible: login or admin panel.
   // Also triggers initial data rendering once authenticated.
   function route() {
-    const hasPin = !!localStorage.getItem(PIN_KEY);
     const authed = sessionStorage.getItem(SESSION_KEY) === "1";
 
-    $("setup-screen").style.display  = "none";
     $("login-screen").style.display  = "none";
     $("admin-panel").style.display   = "none";
 
-    if (!hasPin) {
-      $("setup-screen").style.display = "flex";
-      requestAnimationFrame(() => $("setup-pin").focus());
-    } else if (!authed) {
+    if (!authed) {
       $("login-screen").style.display = "flex";
       requestAnimationFrame(() => $("pin-input").focus());
     } else {
@@ -446,31 +414,19 @@
   }
 
   // ─────────────────────────────────────────────────────
-  //  SETUP (first-run PIN creation)
-  // ─────────────────────────────────────────────────────
-  $("setup-btn").addEventListener("click", async () => {
-    const pin  = $("setup-pin").value.trim();
-    const pin2 = $("setup-pin-confirm").value.trim();
-    $("setup-error").textContent = "";
-
-    if (pin.length < 4) { $("setup-error").textContent = "PIN must be at least 4 characters."; return; }
-    if (pin !== pin2)   { $("setup-error").textContent = "PINs do not match."; return; }
-
-    await setPin(pin);
-    sessionStorage.setItem(SESSION_KEY, "1");
-    route();
-  });
-
-  $("setup-pin-confirm").addEventListener("keydown", e => { if (e.key === "Enter") $("setup-btn").click(); });
-  $("setup-pin").addEventListener("keydown", e => { if (e.key === "Enter") $("setup-pin-confirm").focus(); });
-
-  // ─────────────────────────────────────────────────────
   //  LOGIN
   // ─────────────────────────────────────────────────────
   $("login-btn").addEventListener("click", async () => {
     const pin = $("pin-input").value;
     $("login-error").textContent = "";
-    if (await checkPin(pin)) {
+    let ok = false;
+    try {
+      ok = await DB.verifyAdminPin(pin);
+    } catch (e) {
+      $("login-error").textContent = "Couldn't reach the server. Try again.";
+      return;
+    }
+    if (ok) {
       sessionStorage.setItem(SESSION_KEY, "1");
       $("pin-input").value = "";
       route();
@@ -1180,14 +1136,27 @@
   //  CHANGE PIN
   // ─────────────────────────────────────────────────────
   $("change-pin-btn").addEventListener("click", async () => {
-    const pin  = $("new-pin").value.trim();
-    const pin2 = $("new-pin-confirm").value.trim();
+    const oldPin = $("current-pin").value.trim();
+    const pin    = $("new-pin").value.trim();
+    const pin2   = $("new-pin-confirm").value.trim();
     $("pin-change-error").textContent = "";
 
-    if (pin.length < 4) { $("pin-change-error").textContent = "PIN must be at least 4 characters."; return; }
-    if (pin !== pin2)   { $("pin-change-error").textContent = "PINs do not match."; return; }
+    if (!oldPin)         { $("pin-change-error").textContent = "Enter the current PIN."; return; }
+    if (pin.length < 4)  { $("pin-change-error").textContent = "PIN must be at least 4 characters."; return; }
+    if (pin !== pin2)    { $("pin-change-error").textContent = "PINs do not match."; return; }
 
-    await setPin(pin);
+    let ok = false;
+    try {
+      ok = await DB.setAdminPin(oldPin, pin);
+    } catch (e) {
+      $("pin-change-error").textContent = "Couldn't reach the server. Try again.";
+      return;
+    }
+    if (!ok) {
+      $("pin-change-error").textContent = "Current PIN is incorrect.";
+      return;
+    }
+    $("current-pin").value = "";
     $("new-pin").value = "";
     $("new-pin-confirm").value = "";
     showToast("✅ PIN updated successfully.");

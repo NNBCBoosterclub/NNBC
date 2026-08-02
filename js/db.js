@@ -339,6 +339,23 @@ async function deleteReceipt(receiptId) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  ADMIN PIN (single shared PIN, verified server-side via RPC —
+//  see supabase/schema.sql for verify_admin_pin / set_admin_pin)
+// ─────────────────────────────────────────────────────────────
+
+async function verifyAdminPin(pin) {
+  const { data, error } = await _sb.rpc("verify_admin_pin", { attempt: pin });
+  if (error) throw error;
+  return !!data;
+}
+
+async function setAdminPin(oldPin, newPin) {
+  const { data, error } = await _sb.rpc("set_admin_pin", { old_pin: oldPin, new_pin: newPin });
+  if (error) throw error;
+  return !!data;
+}
+
+// ─────────────────────────────────────────────────────────────
 //  AUTH
 // ─────────────────────────────────────────────────────────────
 
@@ -446,6 +463,10 @@ async function uploadReceiptImage(receiptId, dataUrl) {
 window.DB = {
   // Raw client (escape hatch for one-off queries)
   client: _sb,
+
+  // Admin PIN
+  verifyAdminPin,
+  setAdminPin,
 
   // Products
   fetchProducts,
