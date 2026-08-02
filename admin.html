@@ -169,6 +169,22 @@
         <button type="button" class="btn-save" id="change-pin-btn">Update PIN</button>
       </div>
       <div class="error-msg" id="pin-change-error"></div>
+
+      <div class="settings-divider"></div>
+
+      <p class="token-title">🔒 Checkout Access Code</p>
+      <p class="admin-copy-small">
+        Require a shared code before cash or Venmo checkout is allowed. This helps limit purchasing to your local unit.
+      </p>
+      <label class="checkout-code-toggle">
+        <input type="checkbox" id="checkout-code-enabled" />
+        Require checkout code
+      </label>
+      <div class="pin-row checkout-code-row">
+        <input type="password" id="checkout-code-input" placeholder="Enter new checkout code" maxlength="40" />
+        <button type="button" class="btn-save" id="save-checkout-code-btn">Save Checkout Code</button>
+      </div>
+      <div id="checkout-code-status" class="token-status"></div>
     </div>
 
     <!-- ── GitHub Sync ── -->
@@ -507,7 +523,7 @@
   // ─────────────────────────────────────────────────────
   // Admin-managed data is stored in Supabase so every visitor/admin
   // sees the same menu, restock status, and receipt history.
-  const DEFAULT_STORE_STATUS  = { state: "normal", message: null, ts: null };
+  const DEFAULT_STORE_STATUS  = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null };
 
   let products      = structuredClone(DEFAULT_PRODUCTS);
   let restockStatus = { ...DEFAULT_STORE_STATUS };
@@ -535,7 +551,16 @@
       state,
       message: value && typeof value.message === "string" ? value.message : null,
       ts: Number.isFinite(value?.ts) ? value.ts : null,
+      checkoutRequired: !!value?.checkoutRequired,
+      checkoutCodeHash: typeof value?.checkoutCodeHash === "string" && value.checkoutCodeHash ? value.checkoutCodeHash : null,
     };
+  }
+
+  async function hashCheckoutCode(code) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode("nnbc_checkout_code_v1:" + code);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
   }
 
   function normalizeReceipts(arr) {
@@ -586,6 +611,7 @@
 
     renderProductList();
     renderStoreStatus();
+    renderCheckoutAccessSettings();
     renderReceiptHistory();
   }
 
@@ -1348,6 +1374,66 @@
       el.style.color = "#1a7a40";
     }
   }
+
+  function renderCheckoutAccessSettings() {
+    const enabledEl = $("checkout-code-enabled");
+    const inputEl = $("checkout-code-input");
+    const statusEl = $("checkout-code-status");
+    if (!enabledEl || !inputEl || !statusEl) return;
+
+    const enabled = !!restockStatus.checkoutRequired;
+    enabledEl.checked = enabled;
+    statusEl.textContent = enabled
+      ? "🔒 Checkout code is currently required."
+      : "🔓 Checkout code is currently optional.";
+    statusEl.style.color = enabled ? "#7a5a00" : "var(--success)";
+  }
+
+  $("checkout-code-enabled").addEventListener("change", () => {
+    const statusEl = $("checkout-code-status");
+    if (!statusEl) return;
+    statusEl.textContent = "Unsaved changes. Click Save Checkout Code to publish.";
+    statusEl.style.color = "#7a5a00";
+  });
+
+  $("save-checkout-code-btn").addEventListener("click", async () => {
+    const enabled = $("checkout-code-enabled").checked;
+    const rawCode = $("checkout-code-input").value.trim();
+    const statusEl = $("checkout-code-status");
+
+    try {
+      let codeHash = restockStatus.checkoutCodeHash || null;
+      if (rawCode) {
+        if (rawCode.length < 4) {
+          statusEl.textContent = "Checkout code must be at least 4 characters.";
+          statusEl.style.color = "var(--danger)";
+          return;
+        }
+        codeHash = await hashCheckoutCode(rawCode);
+      }
+
+      if (enabled && !codeHash) {
+        statusEl.textContent = "Set a checkout code before enabling this requirement.";
+        statusEl.style.color = "var(--danger)";
+        return;
+      }
+
+      await DB.saveCheckoutAccess({ required: enabled, codeHash });
+      restockStatus = {
+        ...restockStatus,
+        checkoutRequired: enabled,
+        checkoutCodeHash: codeHash,
+      };
+
+      $("checkout-code-input").value = "";
+      renderCheckoutAccessSettings();
+      showToast("🔐 Checkout access settings saved.");
+    } catch (err) {
+      statusEl.textContent = err.message || "Could not save checkout code settings.";
+      statusEl.style.color = "var(--danger)";
+      showToast(`⚠️ ${err.message || "Could not save checkout code settings."}`, true);
+    }
+  });
 
   $("btn-mark-ordered").addEventListener("click", async () => {
     try {

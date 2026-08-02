@@ -109,6 +109,26 @@
       min-height: 1.2em;
     }
 
+    .settings-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+    }
+
+    .checkout-code-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-bottom: 0.65rem;
+      cursor: pointer;
+    }
+
+    .checkout-code-row {
+      margin-top: 0;
+    }
+
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);

@@ -9,8 +9,8 @@
 //    4. Create Storage buckets:  avatars (public), receipts (private)
 // ═══════════════════════════════════════════════════════════════════
 
-const SUPABASE_URL      = "https://YOUR_PROJECT_REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_URL      = "https://rmzgirkyfsdpytdhxcdb.supabase.co/rest/v1/";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtemdpcmt5ZnNkcHl0ZGh4Y2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NjI3NDcsImV4cCI6MjA5NDEzODc0N30.I86NxGDoKb4WrR9xCA6R54nGOEtefCdZdxjB2dd8rGc";
 
 // Supabase JS v2 is loaded via CDN before this file.
 // The global `supabase` object is provided by the CDN bundle.
@@ -132,17 +132,45 @@ async function fetchStoreStatus() {
   if (error && error.code !== "PGRST116") throw error;
   if (!data) return { state: "normal", message: null, ts: null };
   return {
-    state:   data.state   || "normal",
-    message: data.message || null,
-    ts:      data.ts      ? new Date(data.ts).getTime() : null,
+    state:             data.state || "normal",
+    message:           data.message || null,
+    ts:                data.ts ? new Date(data.ts).getTime() : null,
+    checkoutRequired:  !!data.checkout_required,
+    checkoutCodeHash:  data.checkout_code_hash || null,
   };
 }
 
 async function saveStoreStatus(state, message = null) {
+  const current = await fetchStoreStatus();
   const { error } = await _sb
     .from("store_status")
     .upsert(
-      { id: 1, state: state || "normal", message: message || null, ts: new Date().toISOString() },
+      {
+        id: 1,
+        state: state || "normal",
+        message: message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!current.checkoutRequired,
+        checkout_code_hash: current.checkoutCodeHash || null,
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw error;
+}
+
+async function saveCheckoutAccess({ required, codeHash }) {
+  const current = await fetchStoreStatus();
+  const { error } = await _sb
+    .from("store_status")
+    .upsert(
+      {
+        id: 1,
+        state: current.state || "normal",
+        message: current.message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!required,
+        checkout_code_hash: codeHash || null,
+      },
       { onConflict: "id" }
     );
   if (error) throw error;
@@ -430,6 +458,7 @@ window.DB = {
   // Store status
   fetchStoreStatus,
   saveStoreStatus,
+  saveCheckoutAccess,
 
   // Orders
   logOrder,

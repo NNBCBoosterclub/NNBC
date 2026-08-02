@@ -25,11 +25,20 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
 
 -- Store status (replaces store-status.json)
 CREATE TABLE IF NOT EXISTS public.store_status (
-  id      INT PRIMARY KEY DEFAULT 1,
-  state   TEXT NOT NULL DEFAULT 'normal',  -- 'normal' | 'ordered' | 'restocked'
-  message TEXT,
-  ts      TIMESTAMPTZ
+  id                 INT PRIMARY KEY DEFAULT 1,
+  state              TEXT NOT NULL DEFAULT 'normal',  -- 'normal' | 'ordered' | 'restocked'
+  message            TEXT,
+  ts                 TIMESTAMPTZ,
+  checkout_required  BOOLEAN NOT NULL DEFAULT false,
+  checkout_code_hash TEXT
 );
+
+-- Backward-compatible migration helpers for existing projects.
+ALTER TABLE public.store_status
+  ADD COLUMN IF NOT EXISTS checkout_required BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE public.store_status
+  ADD COLUMN IF NOT EXISTS checkout_code_hash TEXT;
 
 -- Seed initial row so upsert always has something to update
 INSERT INTO public.store_status (id, state, message, ts)

@@ -100,6 +100,13 @@
       </div>
       <div id="checkout-nutrition-summary" class="checkout-nutrition-summary is-hidden"></div>
       <div id="checkout-allergy-warning" class="venmo-warning is-hidden"></div>
+
+      <div id="checkout-code-block" class="checkout-code-block is-hidden">
+        <label class="checkout-code-label" for="checkout-access-code">Checkout Access Code</label>
+        <input type="password" id="checkout-access-code" class="checkout-code-input" placeholder="Enter unit checkout code" maxlength="40" autocomplete="one-time-code" />
+        <div id="checkout-code-error" class="checkout-code-error"></div>
+      </div>
+
       <div class="venmo-account-box">
         <div class="v-label">Pay this Venmo account</div>
         <div class="v-name" id="venmo-display-name"></div>
@@ -1085,6 +1092,18 @@
       }
     }
 
+    const status = loadStoreStatus();
+    const codeBlock = getById("checkout-code-block");
+    const codeInput = getById("checkout-access-code");
+    const codeError = getById("checkout-code-error");
+    if (codeBlock && codeInput && codeError) {
+      const required = !!status.checkoutRequired && !!status.checkoutCodeHash;
+      codeBlock.classList.toggle("is-hidden", !required);
+      codeInput.value = "";
+      codeError.textContent = "";
+      if (required) setTimeout(() => codeInput.focus(), 0);
+    }
+
     getById("checkout-modal").classList.add("open");
   }
 
@@ -1479,6 +1498,8 @@
   //  CASH PAYMENT
   // ─────────────────────────────────────────────────────
   getById("pay-cash-btn").addEventListener("click", async () => {
+    if (!(await validateCheckoutAccessCode())) return;
+
     // Decrement stock locally for instant UI feedback.
     Object.entries(cart).forEach(([id, qty]) => {
       const item = products.find(p => p.id === +id);
@@ -1512,7 +1533,9 @@
   // ─────────────────────────────────────────────────────
   //  VENMO DEEP LINK + STOCK DECREMENT
   // ─────────────────────────────────────────────────────
-  getById("open-venmo-btn").addEventListener("click", () => {
+  getById("open-venmo-btn").addEventListener("click", async () => {
+    if (!(await validateCheckoutAccessCode())) return;
+
     const total     = cartTotal();
     const buyerName = getDisplayName();
 
@@ -1812,7 +1835,7 @@
   //  STORE STATUS BANNER
   // ─────────────────────────────────────────────────────
   const STORE_STATUS_URL = "https://raw.githubusercontent.com/NNBCBoosterclub/NNBC/main/store-status.json";
-  let storeStatus = { state: "normal", message: null, ts: null };
+  let storeStatus = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null };
 
   function normalizeStoreStatus(value) {
     const rawState = value && typeof value === "object" ? value.state : null;
@@ -1820,7 +1843,46 @@
       state: rawState === "ordered" || rawState === "restocked" ? rawState : "normal",
       message: value && typeof value.message === "string" ? value.message : null,
       ts: Number.isFinite(value?.ts) ? value.ts : null,
+      checkoutRequired: !!value?.checkoutRequired,
+      checkoutCodeHash: typeof value?.checkoutCodeHash === "string" && value.checkoutCodeHash ? value.checkoutCodeHash : null,
     };
+  }
+
+  async function hashCheckoutCode(code) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode("nnbc_checkout_code_v1:" + code);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function validateCheckoutAccessCode() {
+    const status = loadStoreStatus();
+    const codeBlock = getById("checkout-code-block");
+    const codeInput = getById("checkout-access-code");
+    const codeError = getById("checkout-code-error");
+    if (!codeBlock || !codeInput || !codeError) return true;
+
+    if (!status.checkoutRequired || !status.checkoutCodeHash) {
+      codeBlock.classList.add("is-hidden");
+      codeInput.value = "";
+      codeError.textContent = "";
+      return true;
+    }
+
+    const rawCode = codeInput.value.trim();
+    if (!rawCode) {
+      codeError.textContent = "Enter the checkout code to continue.";
+      return false;
+    }
+
+    const inputHash = await hashCheckoutCode(rawCode);
+    if (inputHash !== status.checkoutCodeHash) {
+      codeError.textContent = "Invalid checkout code.";
+      return false;
+    }
+
+    codeError.textContent = "";
+    return true;
   }
 
   async function initStoreStatusFromServer() {
