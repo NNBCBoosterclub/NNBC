@@ -9,7 +9,7 @@
 //    4. Create Storage buckets:  avatars (public), receipts (private)
 // ═══════════════════════════════════════════════════════════════════
 
-const SUPABASE_URL      = "https://rmzgirkyfsdpytdhxcdb.supabase.co/rest/v1/";
+const SUPABASE_URL      = "https://rmzgirkyfsdpytdhxcdb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtemdpcmt5ZnNkcHl0ZGh4Y2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NjI3NDcsImV4cCI6MjA5NDEzODc0N30.I86NxGDoKb4WrR9xCA6R54nGOEtefCdZdxjB2dd8rGc";
 
 // Supabase JS v2 is loaded via CDN before this file.
