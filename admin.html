@@ -423,7 +423,8 @@
     try {
       ok = await DB.verifyAdminPin(pin);
     } catch (e) {
-      $("login-error").textContent = "Couldn't reach the server. Try again.";
+      console.error("verifyAdminPin failed:", e);
+      $("login-error").textContent = "Server error: " + (e?.message || "unknown — check console");
       return;
     }
     if (ok) {
@@ -1149,7 +1150,8 @@
     try {
       ok = await DB.setAdminPin(oldPin, pin);
     } catch (e) {
-      $("pin-change-error").textContent = "Couldn't reach the server. Try again.";
+      console.error("setAdminPin failed:", e);
+      $("pin-change-error").textContent = "Server error: " + (e?.message || "unknown — check console");
       return;
     }
     if (!ok) {
