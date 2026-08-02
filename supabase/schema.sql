@@ -189,8 +189,29 @@ CREATE POLICY "receipt_lines_all" ON public.receipt_lines  FOR ALL USING (true) 
 --  Enable realtime for tables that need multi-device sync.
 -- ─────────────────────────────────────────────────────────────
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.menu_items;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+-- ALTER PUBLICATION ... ADD TABLE has no IF NOT EXISTS form, and errors
+-- (42710) if the table is already a publication member — which aborts
+-- the rest of this script on a re-run. Guard each one explicitly so the
+-- whole file stays safe to run multiple times.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'menu_items'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.menu_items;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'orders'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────
 --  ADMIN AUTH (single shared PIN, verified server-side)
