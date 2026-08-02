@@ -250,7 +250,7 @@ CREATE OR REPLACE FUNCTION public.verify_admin_pin(attempt TEXT)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   stored TEXT;
@@ -268,7 +268,7 @@ CREATE OR REPLACE FUNCTION public.set_admin_pin(old_pin TEXT, new_pin TEXT)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 BEGIN
   IF NOT public.verify_admin_pin(old_pin) THEN
