@@ -171,6 +171,23 @@
         <button type="button" class="btn-save" id="save-checkout-code-btn">Save Checkout Code</button>
       </div>
       <div id="checkout-code-status" class="token-status"></div>
+
+      <div class="settings-divider"></div>
+
+      <p class="token-title">🎟️ Ticket Sales Gate</p>
+      <p class="admin-copy-small">
+        Items marked "Event ticket" (e.g. Jersey Friday) automatically stop selling all day Friday, Eastern time,
+        and reopen Saturday. Use this to override that schedule if needed.
+      </p>
+      <div class="pin-row">
+        <select id="ticket-gate-mode">
+          <option value="auto">Automatic (Thu 23:59 ET cutoff)</option>
+          <option value="open">Force open</option>
+          <option value="closed">Force closed</option>
+        </select>
+        <button type="button" class="btn-save" id="save-ticket-gate-btn">Save</button>
+      </div>
+      <div id="ticket-gate-status" class="token-status"></div>
     </div>
 
     <!-- ── GitHub Sync ── -->
@@ -257,6 +274,12 @@
                 Unlimited
               </label>
             </div>
+          </div>
+          <div class="form-group full">
+            <label class="unlimited-label" for="f-is-ticket">
+              <input type="checkbox" id="f-is-ticket" />
+              Event ticket (subject to the weekly Thu 23:59 ET sales cutoff)
+            </label>
           </div>
           <div class="form-group full">
             <label for="f-image">Product Photo (optional, max 10 MB)</label>
@@ -471,7 +494,7 @@
     { id: 16, name: "Hot Dog",        emoji: "🌭", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 17, name: "Nachos",         emoji: "🧀", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 18, name: "Pizza Slice",    emoji: "🍕", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
-    { id: 19, name: "Spirit Wear",    emoji: "👕", price: 10.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
+    { id: 19, name: "Jersey Friday | Business Casual", emoji: "👕", price: 5.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null, isTicket: true },
     { id: 20, name: "Miscellaneous",  emoji: "🛍️", price: 1.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
   ];
 
@@ -480,7 +503,7 @@
   // ─────────────────────────────────────────────────────
   // Admin-managed data is stored in Supabase so every visitor/admin
   // sees the same menu, restock status, and receipt history.
-  const DEFAULT_STORE_STATUS  = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null };
+  const DEFAULT_STORE_STATUS  = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null, ticketGateOverride: null };
 
   let products      = structuredClone(DEFAULT_PRODUCTS);
   let restockStatus = { ...DEFAULT_STORE_STATUS };
@@ -497,6 +520,7 @@
         nutrition:   ('nutrition'   in p) ? p.nutrition   : null,
         barcode:     ('barcode'     in p) ? p.barcode     : null,
         allergies:   ('allergies'   in p) ? p.allergies   : null,
+        isTicket:    !!p.isTicket,
       };
     });
   }
@@ -510,6 +534,7 @@
       ts: Number.isFinite(value?.ts) ? value.ts : null,
       checkoutRequired: !!value?.checkoutRequired,
       checkoutCodeHash: typeof value?.checkoutCodeHash === "string" && value.checkoutCodeHash ? value.checkoutCodeHash : null,
+      ticketGateOverride: (value?.ticketGateOverride === "open" || value?.ticketGateOverride === "closed") ? value.ticketGateOverride : null,
     };
   }
 
@@ -569,6 +594,7 @@
     renderProductList();
     renderStoreStatus();
     renderCheckoutAccessSettings();
+    renderTicketGateSettings();
     renderReceiptHistory();
   }
 
@@ -821,6 +847,7 @@
     $("f-category").value = p.category;
     $("f-emoji").value    = p.emoji || "";
     $("f-barcode").value  = p.barcode || "";
+    $("f-is-ticket").checked = !!p.isTicket;
     setStockField(p.stock !== undefined ? p.stock : null);
     resetImageField(p.imageUrl || null);
     updateSubcategoryField(p.category, p.subcategory || "");
@@ -888,6 +915,7 @@
     const subcategory = SUBCATEGORIES[category] ? ($("f-subcategory").value || null) : null;
     const nutrition   = getNutritionFields();
     const allergies   = $("f-allergies").value.trim() || null;
+    const isTicket    = $("f-is-ticket").checked;
 
     if (!name || isNaN(price) || price < 0 || !category) {
       showToast("Please fill in all required fields.", true);
@@ -906,7 +934,7 @@
         if (pendingImageUrl === "")        imageUrl = null;
         else if (pendingImageUrl !== null) imageUrl = pendingImageUrl;
 
-        list[idx] = { ...list[idx], name, price, category, subcategory, emoji, barcode, imageUrl, stock, nutrition, allergies };
+        list[idx] = { ...list[idx], name, price, category, subcategory, emoji, barcode, imageUrl, stock, nutrition, allergies, isTicket };
         await saveProducts(list);
         showToast(`✅ "${name}" updated.`);
       } else {
@@ -917,7 +945,7 @@
           return;
         }
         const imageUrl = (pendingImageUrl && pendingImageUrl !== "") ? pendingImageUrl : null;
-        list.push({ id: nextId(list), name, price, category, subcategory, emoji, barcode, imageUrl, stock, nutrition, allergies });
+        list.push({ id: nextId(list), name, price, category, subcategory, emoji, barcode, imageUrl, stock, nutrition, allergies, isTicket });
         await saveProducts(list);
         showToast(`✅ "${name}" added to menu.`);
       }
@@ -1032,9 +1060,12 @@
         const nutritionBadge = p.nutrition
             ? ` &nbsp;·&nbsp; <span class="cat-badge cat-badge-nutrition">🥗 Nutrition</span>`
           : "";
+        const ticketBadge = p.isTicket
+            ? ` &nbsp;·&nbsp; <span class="cat-badge cat-badge-nutrition">🎟️ Ticket</span>`
+          : "";
         info.innerHTML = `
           <div class="row-name">${escHtml(p.name)}</div>
-          <div class="row-meta">$${p.price.toFixed(2)} &nbsp;·&nbsp; <span class="cat-badge">${escHtml(p.category)}</span>${subcatBadge}${nutritionBadge}${allergyBadge}</div>`;
+          <div class="row-meta">$${p.price.toFixed(2)} &nbsp;·&nbsp; <span class="cat-badge">${escHtml(p.category)}</span>${subcatBadge}${nutritionBadge}${allergyBadge}${ticketBadge}</div>`;
         row.appendChild(info);
 
         // Stock section (badge + restock button)
@@ -1403,6 +1434,46 @@
       statusEl.textContent = err.message || "Could not save checkout code settings.";
       statusEl.style.color = "var(--danger)";
       showToast(`⚠️ ${err.message || "Could not save checkout code settings."}`, true);
+    }
+  });
+
+  // ─────────────────────────────────────────────────────
+  //  TICKET SALES GATE
+  // ─────────────────────────────────────────────────────
+  function renderTicketGateSettings() {
+    const modeEl = $("ticket-gate-mode");
+    const statusEl = $("ticket-gate-status");
+    if (!modeEl || !statusEl) return;
+
+    const override = restockStatus.ticketGateOverride || null;
+    modeEl.value = override === "open" ? "open" : override === "closed" ? "closed" : "auto";
+
+    if (override === "open") {
+      statusEl.textContent = "🔓 Forced open — ticket items sell regardless of day.";
+      statusEl.style.color = "var(--success)";
+    } else if (override === "closed") {
+      statusEl.textContent = "🔒 Forced closed — ticket items are blocked regardless of day.";
+      statusEl.style.color = "var(--danger)";
+    } else {
+      statusEl.textContent = "⏱️ Automatic — closes all day Friday (Eastern time), reopens Saturday.";
+      statusEl.style.color = "#7a5a00";
+    }
+  }
+
+  $("save-ticket-gate-btn").addEventListener("click", async () => {
+    const mode = $("ticket-gate-mode").value;
+    const override = mode === "open" ? "open" : mode === "closed" ? "closed" : null;
+    const statusEl = $("ticket-gate-status");
+
+    try {
+      await DB.saveTicketGateOverride(override);
+      restockStatus = { ...restockStatus, ticketGateOverride: override };
+      renderTicketGateSettings();
+      showToast("🎟️ Ticket gate setting saved.");
+    } catch (err) {
+      statusEl.textContent = err.message || "Could not save ticket gate setting.";
+      statusEl.style.color = "var(--danger)";
+      showToast(`⚠️ ${err.message || "Could not save ticket gate setting."}`, true);
     }
   });
 

@@ -393,7 +393,7 @@
     { id: 16, name: "Hot Dog",        emoji: "🌭", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 17, name: "Nachos",         emoji: "🧀", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
     { id: 18, name: "Pizza Slice",    emoji: "🍕", price: 3.00, category: "Meal",  subcategory: null,      imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
-    { id: 19, name: "Jersey Friday | Business Casual",    emoji: "👕", price: 5.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
+    { id: 19, name: "Jersey Friday | Business Casual",    emoji: "👕", price: 5.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null, isTicket: true },
     { id: 20, name: "Miscellaneous",  emoji: "🛍️", price: 1.00, category: "Other", subcategory: null,     imageUrl: null, stock: null, nutrition: null, barcode: null, allergies: null },
   ];
 
@@ -418,6 +418,8 @@
           if (!('barcode' in p)) p.barcode = null;
           // Back-compat: ensure allergies field exists
           if (!('allergies' in p)) p.allergies = null;
+          // Back-compat: ensure isTicket field exists
+          if (!('isTicket' in p)) p.isTicket = false;
           return p;
         });
       }
@@ -768,12 +770,16 @@
       );
     }
 
+    const ticketStatus = loadStoreStatus();
+    const ticketSaleOpen = isTicketSaleOpen(ticketStatus);
+
     filtered.forEach(p => {
       // Stock model:
       // null/undefined => unlimited (always purchasable)
       // 0              => out of stock
       // positive int   => tracked remaining quantity
-      const outOfStock = p.stock === 0;
+      const ticketGated = !!p.isTicket && !ticketSaleOpen;
+      const outOfStock  = p.stock === 0 || ticketGated;
       const qty = cart[p.id] || 0;
 
       const card = document.createElement("div");
@@ -824,7 +830,7 @@
           <button class="qty-btn" data-action="inc" aria-label="Increase quantity" ${outOfStock ? 'disabled' : ''}>+</button>
         </div>
         <button class="add-btn" ${qty === 0 || outOfStock ? 'disabled' : ''} data-id="${p.id}">
-          ${outOfStock ? 'Out of Stock' : qty === 0 ? 'Select quantity' : `Add ${qty} to cart`}
+          ${ticketGated ? (ticketGateMessage(ticketStatus) || 'Ticket sales closed') : outOfStock ? 'Out of Stock' : qty === 0 ? 'Select quantity' : `Add ${qty} to cart`}
         </button>`);
 
       // Nutrition button opens the nutrition facts panel.
@@ -1498,6 +1504,7 @@
   //  CASH PAYMENT
   // ─────────────────────────────────────────────────────
   getById("pay-cash-btn").addEventListener("click", async () => {
+    if (!validateTicketGateForCart()) return;
     if (!(await validateCheckoutAccessCode())) return;
 
     // Decrement stock locally for instant UI feedback.
@@ -1534,6 +1541,7 @@
   //  VENMO DEEP LINK + STOCK DECREMENT
   // ─────────────────────────────────────────────────────
   getById("open-venmo-btn").addEventListener("click", async () => {
+    if (!validateTicketGateForCart()) return;
     if (!(await validateCheckoutAccessCode())) return;
 
     const total     = cartTotal();
@@ -1835,17 +1843,43 @@
   //  STORE STATUS BANNER
   // ─────────────────────────────────────────────────────
   const STORE_STATUS_URL = "https://raw.githubusercontent.com/NNBCBoosterclub/NNBC/main/store-status.json";
-  let storeStatus = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null };
+  let storeStatus = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null, ticketGateOverride: null };
 
   function normalizeStoreStatus(value) {
     const rawState = value && typeof value === "object" ? value.state : null;
+    const rawOverride = value?.ticketGateOverride;
     return {
       state: rawState === "ordered" || rawState === "restocked" ? rawState : "normal",
       message: value && typeof value.message === "string" ? value.message : null,
       ts: Number.isFinite(value?.ts) ? value.ts : null,
       checkoutRequired: !!value?.checkoutRequired,
       checkoutCodeHash: typeof value?.checkoutCodeHash === "string" && value.checkoutCodeHash ? value.checkoutCodeHash : null,
+      ticketGateOverride: rawOverride === "open" || rawOverride === "closed" ? rawOverride : null,
     };
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  TICKET GATE (event tickets — e.g. Jersey Friday)
+  // ─────────────────────────────────────────────────────
+  // Automatic rule: ticket items are locked all day Friday, Eastern time
+  // (America/New_York, so it tracks EST/EDT automatically) -- sales for
+  // the week close the night before per the Thursday 23:59 ET cutoff, and
+  // reopen Saturday for the following week. An admin override in
+  // store_status (open/closed) always wins over the automatic schedule.
+  function isTicketSaleOpen(status) {
+    if (status && status.ticketGateOverride === "open")   return true;
+    if (status && status.ticketGateOverride === "closed") return false;
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      weekday: "short",
+    }).format(new Date());
+    return weekday !== "Fri";
+  }
+
+  function ticketGateMessage(status) {
+    if (status && status.ticketGateOverride === "closed") return "Ticket sales closed";
+    if (status && status.ticketGateOverride === "open")   return null;
+    return "Ticket sales closed for today — reopens tomorrow";
   }
 
   async function hashCheckoutCode(code) {
@@ -1885,6 +1919,24 @@
     return true;
   }
 
+  // Defense-in-depth: re-check the ticket gate at the moment of payment,
+  // not just at render time. A ticket could have been added to the cart
+  // before the Thu 23:59 ET cutoff and paid for after it, if the tab was
+  // left open. Blocks the specific gated items rather than the whole cart.
+  function validateTicketGateForCart() {
+    if (isTicketSaleOpen(loadStoreStatus())) return true;
+    const blocked = Object.entries(cart)
+      .filter(([, q]) => q > 0)
+      .map(([id]) => products.find(p => p.id === +id))
+      .filter(p => p && p.isTicket);
+    if (blocked.length === 0) return true;
+    blocked.forEach(p => delete cart[p.id]);
+    updateCartUI();
+    renderProducts();
+    showToast(`Ticket sales are closed right now — removed ${blocked.map(p => p.name).join(', ')} from your cart.`);
+    return false;
+  }
+
   async function initStoreStatusFromServer() {
     try {
       const row = await DB.fetchStoreStatus();
@@ -1921,6 +1973,18 @@
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) initStoreStatusFromServer();
   });
+
+  // Re-check the ticket gate roughly every minute so a tab left open
+  // across the Thu 23:59 ET cutoff (or the Sat reopen) flips over on its
+  // own instead of waiting for the next reload or tab-focus event.
+  let _lastTicketGateOpen = isTicketSaleOpen(loadStoreStatus());
+  setInterval(() => {
+    const nowOpen = isTicketSaleOpen(loadStoreStatus());
+    if (nowOpen !== _lastTicketGateOpen) {
+      _lastTicketGateOpen = nowOpen;
+      renderProducts();
+    }
+  }, 60 * 1000);
 
   // ─────────────────────────────────────────────────────
   //  SUPABASE AUTH STATE — keep _sbUser in sync across tabs/refreshes

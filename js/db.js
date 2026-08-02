@@ -42,6 +42,7 @@ function _normalizeProduct(row) {
     nutrition:   row.nutrition   || null,
     allergies:   row.allergies   || null,
     barcode:     row.barcode     || null,
+    isTicket:    !!row.is_ticket,
   };
 }
 
@@ -59,6 +60,7 @@ function _productToRow(p) {
     nutrition:   p.nutrition   || null,
     allergies:   p.allergies   || null,
     barcode:     p.barcode     || null,
+    is_ticket:   !!p.isTicket,
   };
 }
 
@@ -130,13 +132,14 @@ async function fetchStoreStatus() {
     .single();
   // PGRST116 = row not found; return default instead of throwing.
   if (error && error.code !== "PGRST116") throw error;
-  if (!data) return { state: "normal", message: null, ts: null };
+  if (!data) return { state: "normal", message: null, ts: null, ticketGateOverride: null };
   return {
-    state:             data.state || "normal",
-    message:           data.message || null,
-    ts:                data.ts ? new Date(data.ts).getTime() : null,
-    checkoutRequired:  !!data.checkout_required,
-    checkoutCodeHash:  data.checkout_code_hash || null,
+    state:               data.state || "normal",
+    message:             data.message || null,
+    ts:                  data.ts ? new Date(data.ts).getTime() : null,
+    checkoutRequired:    !!data.checkout_required,
+    checkoutCodeHash:    data.checkout_code_hash || null,
+    ticketGateOverride:  data.ticket_gate_override || null,  // null=auto, 'open', or 'closed'
   };
 }
 
@@ -152,6 +155,7 @@ async function saveStoreStatus(state, message = null) {
         ts: new Date().toISOString(),
         checkout_required: !!current.checkoutRequired,
         checkout_code_hash: current.checkoutCodeHash || null,
+        ticket_gate_override: current.ticketGateOverride || null,
       },
       { onConflict: "id" }
     );
@@ -170,6 +174,27 @@ async function saveCheckoutAccess({ required, codeHash }) {
         ts: new Date().toISOString(),
         checkout_required: !!required,
         checkout_code_hash: codeHash || null,
+        ticket_gate_override: current.ticketGateOverride || null,
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw error;
+}
+
+// override: null (automatic schedule), 'open' (force open), or 'closed' (force closed)
+async function saveTicketGateOverride(override) {
+  const current = await fetchStoreStatus();
+  const { error } = await _sb
+    .from("store_status")
+    .upsert(
+      {
+        id: 1,
+        state: current.state || "normal",
+        message: current.message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!current.checkoutRequired,
+        checkout_code_hash: current.checkoutCodeHash || null,
+        ticket_gate_override: override || null,
       },
       { onConflict: "id" }
     );
@@ -480,6 +505,7 @@ window.DB = {
   fetchStoreStatus,
   saveStoreStatus,
   saveCheckoutAccess,
+  saveTicketGateOverride,
 
   // Orders
   logOrder,

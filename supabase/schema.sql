@@ -20,17 +20,22 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
   nutrition   JSONB,     -- { calories, protein, totalFat, saturatedFat, ... }
   allergies   TEXT,
   barcode     TEXT,
+  is_ticket   BOOLEAN NOT NULL DEFAULT false,  -- event ticket item, subject to the weekly ticket gate
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.menu_items
+  ADD COLUMN IF NOT EXISTS is_ticket BOOLEAN NOT NULL DEFAULT false;
+
 -- Store status (replaces store-status.json)
 CREATE TABLE IF NOT EXISTS public.store_status (
-  id                 INT PRIMARY KEY DEFAULT 1,
-  state              TEXT NOT NULL DEFAULT 'normal',  -- 'normal' | 'ordered' | 'restocked'
-  message            TEXT,
-  ts                 TIMESTAMPTZ,
-  checkout_required  BOOLEAN NOT NULL DEFAULT false,
-  checkout_code_hash TEXT
+  id                   INT PRIMARY KEY DEFAULT 1,
+  state                TEXT NOT NULL DEFAULT 'normal',  -- 'normal' | 'ordered' | 'restocked'
+  message              TEXT,
+  ts                   TIMESTAMPTZ,
+  checkout_required    BOOLEAN NOT NULL DEFAULT false,
+  checkout_code_hash   TEXT,
+  ticket_gate_override TEXT  -- NULL = automatic schedule; 'open'/'closed' = manual override
 );
 
 -- Backward-compatible migration helpers for existing projects.
@@ -39,6 +44,9 @@ ALTER TABLE public.store_status
 
 ALTER TABLE public.store_status
   ADD COLUMN IF NOT EXISTS checkout_code_hash TEXT;
+
+ALTER TABLE public.store_status
+  ADD COLUMN IF NOT EXISTS ticket_gate_override TEXT;
 
 -- Seed initial row so upsert always has something to update
 INSERT INTO public.store_status (id, state, message, ts)
@@ -298,26 +306,38 @@ GRANT EXECUTE ON FUNCTION public.set_admin_pin(TEXT, TEXT)   TO anon, authentica
 --  Matches DEFAULT_PRODUCTS in the frontend.
 -- ─────────────────────────────────────────────────────────────
 
-INSERT INTO public.menu_items (id, name, emoji, price, category, subcategory, image_url, stock, nutrition, allergies, barcode)
+-- Note: row 19 here is kept aligned with DEFAULT_PRODUCTS in index.html/
+-- admin.html (Jersey Friday ticket item). If your live menu_items table
+-- already has a different row 19 from an earlier seed, this INSERT won't
+-- touch it (ON CONFLICT DO NOTHING) -- flip is_ticket on the real ticket
+-- item from Admin instead.
+INSERT INTO public.menu_items (id, name, emoji, price, category, subcategory, image_url, stock, nutrition, allergies, barcode, is_ticket)
 VALUES
-  (1,  'Chips',         '🥔', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL),
-  (2,  'Pretzels',      '🥨', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL),
-  (3,  'Granola Bar',   '🍫', 1.50, 'Snack', 'Health',  NULL, NULL, NULL, NULL, NULL),
-  (4,  'Cookies',       '🍪', 1.00, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL),
-  (5,  'Crackers',      '🫙', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL),
-  (6,  'Fruit Snacks',  '🍬', 1.00, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL),
-  (7,  'Popcorn',       '🍿', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL),
-  (8,  'Candy Bar',     '🍫', 1.50, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL),
-  (9,  'Water',         '💧', 1.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL),
-  (10, 'Sports Drink',  '🥤', 2.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL),
-  (11, 'Juice Box',     '🧃', 1.50, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL),
-  (12, 'Soda',          '🥤', 1.50, 'Drink', 'Soda',    NULL, NULL, NULL, NULL, NULL),
-  (13, 'Hot Chocolate', '☕', 2.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL),
-  (14, 'Coffee',        '☕', 1.50, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL),
-  (15, 'Sandwich',      '🥪', 4.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL),
-  (16, 'Hot Dog',       '🌭', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL),
-  (17, 'Nachos',        '🧀', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL),
-  (18, 'Pizza Slice',   '🍕', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL),
-  (19, 'Spirit Wear',   '👕', 10.00,'Other', NULL,      NULL, NULL, NULL, NULL, NULL),
-  (20, 'Miscellaneous', '🛍️',1.00, 'Other', NULL,      NULL, NULL, NULL, NULL, NULL)
+  (1,  'Chips',         '🥔', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL, false),
+  (2,  'Pretzels',      '🥨', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL, false),
+  (3,  'Granola Bar',   '🍫', 1.50, 'Snack', 'Health',  NULL, NULL, NULL, NULL, NULL, false),
+  (4,  'Cookies',       '🍪', 1.00, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL, false),
+  (5,  'Crackers',      '🫙', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL, false),
+  (6,  'Fruit Snacks',  '🍬', 1.00, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL, false),
+  (7,  'Popcorn',       '🍿', 1.00, 'Snack', 'Savory',  NULL, NULL, NULL, NULL, NULL, false),
+  (8,  'Candy Bar',     '🍫', 1.50, 'Snack', 'Sweet',   NULL, NULL, NULL, NULL, NULL, false),
+  (9,  'Water',         '💧', 1.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL, false),
+  (10, 'Sports Drink',  '🥤', 2.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL, false),
+  (11, 'Juice Box',     '🧃', 1.50, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL, false),
+  (12, 'Soda',          '🥤', 1.50, 'Drink', 'Soda',    NULL, NULL, NULL, NULL, NULL, false),
+  (13, 'Hot Chocolate', '☕', 2.00, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL, false),
+  (14, 'Coffee',        '☕', 1.50, 'Drink', 'Other',   NULL, NULL, NULL, NULL, NULL, false),
+  (15, 'Sandwich',      '🥪', 4.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL, false),
+  (16, 'Hot Dog',       '🌭', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL, false),
+  (17, 'Nachos',        '🧀', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL, false),
+  (18, 'Pizza Slice',   '🍕', 3.00, 'Meal',  NULL,      NULL, NULL, NULL, NULL, NULL, false),
+  (19, 'Jersey Friday | Business Casual', '👕', 5.00, 'Other', NULL, NULL, NULL, NULL, NULL, NULL, true),
+  (20, 'Miscellaneous', '🛍️',1.00, 'Other', NULL,      NULL, NULL, NULL, NULL, NULL, false)
 ON CONFLICT (id) DO NOTHING;
+
+-- If row 19 already exists from an earlier seed (e.g. as "Spirit Wear"),
+-- this flips the ticket flag on whichever row is actually the Jersey
+-- Friday item by name -- safe to run either way.
+UPDATE public.menu_items
+SET is_ticket = true
+WHERE name ILIKE 'Jersey Friday%';
