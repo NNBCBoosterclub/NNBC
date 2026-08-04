@@ -1823,6 +1823,15 @@
   });
 
   // ─────────────────────────────────────────────────────
+  //  STORE STATUS BANNER
+  // ─────────────────────────────────────────────────────
+  // Declared before INIT below: renderProducts() (called during init)
+  // reads storeStatus via loadStoreStatus() for the ticket gate check,
+  // so this must exist before that first render, not after.
+  const STORE_STATUS_URL = "https://raw.githubusercontent.com/NNBCBoosterclub/NNBC/main/store-status.json";
+  let storeStatus = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null, ticketGateOverride: null };
+
+  // ─────────────────────────────────────────────────────
   //  INIT
   // ─────────────────────────────────────────────────────
   // Startup order is intentional: filters/tabs render first, then cart/user display updates.
@@ -1838,12 +1847,6 @@
   updateUserChip();
   // Fetch the latest catalog from Supabase (localStorage provides instant first paint).
   initProductsFromServer();
-
-  // ─────────────────────────────────────────────────────
-  //  STORE STATUS BANNER
-  // ─────────────────────────────────────────────────────
-  const STORE_STATUS_URL = "https://raw.githubusercontent.com/NNBCBoosterclub/NNBC/main/store-status.json";
-  let storeStatus = { state: "normal", message: null, ts: null, checkoutRequired: false, checkoutCodeHash: null, ticketGateOverride: null };
 
   function normalizeStoreStatus(value) {
     const rawState = value && typeof value === "object" ? value.state : null;
