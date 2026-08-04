@@ -32,6 +32,37 @@ This document is a technical map of the app architecture, major components, exte
 - Seed data
 
 ## Frontend Structure
+### JavaScript Modules (native ES modules, no build step)
+Both pages load a single `<script type="module" src="js/{store|admin}/main.js">` entry point. `js/db.js` stays a classic script exposing `window.DB` globally, called identically from both module sets.
+
+`js/store/` (storefront, loaded by `index.html`):
+- `state.js`: constants (Venmo info, storage keys, subcategories, default products) and the shared `state` object (products, cart, active category/search, auth/profile, store status)
+- `utils.js`: DOM/formatting helpers (`$`, `formatPrice`, `showToast`, `escHtml`, `safeImageUrl`)
+- `ticket-gate.js`: pure EST/EDT-aware ticket sale window logic
+- `store-status.js`: load/normalize/render the store status banner
+- `products.js`: load/save products, barcode map, server sync
+- `cart.js`: cart totals, nutrition/allergen rollups, cart drawer UI
+- `catalog.js`: category tabs, product grid rendering, nutrition modal, search
+- `account.js`: auth/profile modals, user chip, auth sync
+- `checkout.js`: checkout modal, ticket-gate + access-code validation, cash/Venmo payment, order logging
+- `share-scanner.js`: share/QR modal and barcode scanner
+- `main.js`: entry point — imports every module, runs page init, realtime subscription
+
+`js/admin/` (admin panel, loaded by `admin.html`):
+- `state.js`: constants and the shared `state` object (products, restock status, receipts, orders)
+- `utils.js`: DOM/formatting helpers
+- `products.js`: product list rendering and CRUD, restock UI
+- `item-form.js`: item modal, image resize/upload, nutrition/stock fields
+- `orders.js`: order history rendering and filters
+- `store-status.js`: status banner, checkout-code and ticket-gate settings
+- `receipts.js`: receipt history, image upload, bulk restock
+- `github-sync.js`: disables the legacy (now unused) GitHub token UI
+- `data-sync.js`: pulls latest shared data from Supabase on login/startup
+- `pin.js`: login/logout, backend PIN verification and change (routing)
+- `main.js`: entry point — imports every module, runs page init
+
+Notes: `products.js` has intentional circular imports with `item-form.js` and `receipts.js` — safe because neither side references the other's exports at module top-level, only inside functions called later. `data-sync.js` exists as its own module specifically to avoid a `pin.js` <-> `main.js` cycle.
+
 ### Storefront Modules (`Styles/index`)
 - `layout.css`: page shell, header, tab layout
 - `products.css`: product cards/grid behavior
@@ -82,8 +113,12 @@ This document is a technical map of the app architecture, major components, exte
 - Profile metadata in `profiles`
 
 ### Admin access
-- Local admin PIN flow in `admin.html`
-- PIN hash stored in browser storage for admin-page guard
+- Single admin PIN, verified server-side via Supabase `SECURITY DEFINER` RPCs (`verify_admin_pin`, `set_admin_pin` in `supabase/schema.sql`) — the PIN itself is never stored or checked client-side
+- `sessionStorage` only holds a per-tab "already authenticated" flag, not the PIN
+
+### Ticket sale gate
+- `menu_items.is_ticket` flags event-ticket products (for example the Jersey Friday item)
+- Sales are only allowed within an EST/EDT-aware window (`js/store/ticket-gate.js`), with an admin override (`store_status.ticket_gate_override`) to force it open/closed
 
 ### Checkout restriction
 - Optional checkout code requirement configured in admin
