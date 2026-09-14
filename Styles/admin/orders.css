@@ -1,0 +1,146 @@
+    /* -- Orders section -- */
+    .orders-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .orders-stats {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .stat-chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    .stat-chip strong { color: var(--text); font-size: 1rem; }
+
+    .filter-btn {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      color: var(--text-light);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-clear-orders {
+      margin-left: auto;
+      padding: 0.35rem 0.75rem;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-clear-orders:hover { background: var(--danger); color: #fff; }
+
+    .order-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+    .order-card.cash-pending { border-left-color: #ffc107; }
+    .order-card.cash-paid    { border-left-color: var(--success); }
+    .order-card.venmo        { border-left-color: #3d95ce; }
+
+    .order-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.4rem;
+    }
+    .order-buyer { font-weight: 700; color: var(--text); font-size: 0.9rem; flex: 1; }
+    .order-time  { font-size: 0.78rem; color: var(--text-light); }
+
+    .order-method-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+    }
+    .order-method-badge.venmo { background: #e8f4fd; color: #3d95ce; }
+    .order-method-badge.cash  { background: #e8fdf0; color: var(--success); }
+
+    .order-status-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+    }
+    .order-status-badge.pending { background: #fff8e1; color: #b7770a; }
+    .order-status-badge.paid    { background: var(--success-bg); color: var(--success); }
+
+    .order-items { font-size: 0.82rem; color: var(--text-light); margin-bottom: 0.4rem; }
+
+    .order-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .order-id    { font-size: 0.75rem; color: var(--text-light); font-family: monospace; }
+    .order-total { font-weight: 700; font-size: 0.95rem; color: var(--primary); }
+    .order-actions { display: flex; gap: 0.4rem; }
+
+    .btn-mark-paid {
+      padding: 0.3rem 0.7rem;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid var(--success);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-mark-paid:hover { background: var(--success); color: #fff; }
+
+    .btn-del-order {
+      padding: 0.3rem 0.6rem;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-del-order:hover { background: var(--danger); color: #fff; }
+
+    .orders-empty {
+      text-align: center;
+      padding: 2.5rem;
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+

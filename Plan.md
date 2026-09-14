@@ -38,11 +38,11 @@ Checklist:
 1. [x] Architecture separation defined and documented.
 2. [x] Mandatory disclaimer added to primary pages.
 3. [ ] Confirm exact legal wording and placement for QR/print flows.
-4. [ ] Confirm timezone authority for Thursday 23:59 and Friday 00:00 events.
+4. [x] Confirm timezone authority for Thursday 23:59 and Friday 00:00 events. -- Eastern time (America/New_York, tracks EST/EDT), confirmed by operator.
 
 Gate A decision needed from operator:
 1. Final disclaimer wording approved.
-2. Event time standard approved.
+2. ~~Event time standard approved.~~ Approved: Eastern time.
 
 ### Phase 1 - Public Storefront Controls
 
@@ -58,11 +58,11 @@ Fallback (COA 2):
 
 Checklist:
 1. [ ] Verify scanner and manual search both pass on mobile.
-2. [ ] Implement and test ticket hard-gate behavior for event items.
+2. [x] Implement and test ticket hard-gate behavior for event items. -- Built: is_ticket flag on menu_items, automatic Fri-all-day lock (America/New_York) with Sat reopen, admin override (auto/force open/force closed) in Settings, checked again at payment time as well as render time. Assumption not yet confirmed by operator: lock window is all of Friday (the event day), reopening Saturday -- Plan.md only specified the Thu 23:59 cutoff moment, not the reopen point.
 3. [ ] Validate checkout tax behavior and display language.
 
 Gate B:
-1. Confirm ticket gating behavior is acceptable before internal automation work begins.
+1. Confirm ticket gating behavior is acceptable before internal automation work begins. -- Pending operator sign-off on the Fri-lock/Sat-reopen assumption above.
 
 ### Phase 2 - Internal Data Hub (SharePoint/M365 Lane)
 
@@ -151,4 +151,5 @@ Started implementation with Phase 0 baseline items:
 2. Replaced planning document with phase-gated implementation ledger.
 
 Next implementation slice:
-1. Ticket gate controls (programmatic cutoff + manual contingency workflow).
+1. ~~Ticket gate controls (programmatic cutoff + manual contingency workflow).~~ Done -- see Phase 1 checklist.
+2. Verify scanner and manual search both pass on mobile (Phase 1, item 1).

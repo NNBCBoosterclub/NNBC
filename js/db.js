@@ -9,8 +9,8 @@
 //    4. Create Storage buckets:  avatars (public), receipts (private)
 // ═══════════════════════════════════════════════════════════════════
 
-const SUPABASE_URL      = "https://YOUR_PROJECT_REF.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_URL      = "https://rmzgirkyfsdpytdhxcdb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtemdpcmt5ZnNkcHl0ZGh4Y2RiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NjI3NDcsImV4cCI6MjA5NDEzODc0N30.I86NxGDoKb4WrR9xCA6R54nGOEtefCdZdxjB2dd8rGc";
 
 // Supabase JS v2 is loaded via CDN before this file.
 // The global `supabase` object is provided by the CDN bundle.
@@ -42,6 +42,7 @@ function _normalizeProduct(row) {
     nutrition:   row.nutrition   || null,
     allergies:   row.allergies   || null,
     barcode:     row.barcode     || null,
+    isTicket:    !!row.is_ticket,
   };
 }
 
@@ -59,6 +60,7 @@ function _productToRow(p) {
     nutrition:   p.nutrition   || null,
     allergies:   p.allergies   || null,
     barcode:     p.barcode     || null,
+    is_ticket:   !!p.isTicket,
   };
 }
 
@@ -130,19 +132,70 @@ async function fetchStoreStatus() {
     .single();
   // PGRST116 = row not found; return default instead of throwing.
   if (error && error.code !== "PGRST116") throw error;
-  if (!data) return { state: "normal", message: null, ts: null };
+  if (!data) return { state: "normal", message: null, ts: null, ticketGateOverride: null };
   return {
-    state:   data.state   || "normal",
-    message: data.message || null,
-    ts:      data.ts      ? new Date(data.ts).getTime() : null,
+    state:               data.state || "normal",
+    message:             data.message || null,
+    ts:                  data.ts ? new Date(data.ts).getTime() : null,
+    checkoutRequired:    !!data.checkout_required,
+    checkoutCodeHash:    data.checkout_code_hash || null,
+    ticketGateOverride:  data.ticket_gate_override || null,  // null=auto, 'open', or 'closed'
   };
 }
 
 async function saveStoreStatus(state, message = null) {
+  const current = await fetchStoreStatus();
   const { error } = await _sb
     .from("store_status")
     .upsert(
-      { id: 1, state: state || "normal", message: message || null, ts: new Date().toISOString() },
+      {
+        id: 1,
+        state: state || "normal",
+        message: message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!current.checkoutRequired,
+        checkout_code_hash: current.checkoutCodeHash || null,
+        ticket_gate_override: current.ticketGateOverride || null,
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw error;
+}
+
+async function saveCheckoutAccess({ required, codeHash }) {
+  const current = await fetchStoreStatus();
+  const { error } = await _sb
+    .from("store_status")
+    .upsert(
+      {
+        id: 1,
+        state: current.state || "normal",
+        message: current.message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!required,
+        checkout_code_hash: codeHash || null,
+        ticket_gate_override: current.ticketGateOverride || null,
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw error;
+}
+
+// override: null (automatic schedule), 'open' (force open), or 'closed' (force closed)
+async function saveTicketGateOverride(override) {
+  const current = await fetchStoreStatus();
+  const { error } = await _sb
+    .from("store_status")
+    .upsert(
+      {
+        id: 1,
+        state: current.state || "normal",
+        message: current.message || null,
+        ts: new Date().toISOString(),
+        checkout_required: !!current.checkoutRequired,
+        checkout_code_hash: current.checkoutCodeHash || null,
+        ticket_gate_override: override || null,
+      },
       { onConflict: "id" }
     );
   if (error) throw error;
@@ -311,6 +364,23 @@ async function deleteReceipt(receiptId) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  ADMIN PIN (single shared PIN, verified server-side via RPC —
+//  see supabase/schema.sql for verify_admin_pin / set_admin_pin)
+// ─────────────────────────────────────────────────────────────
+
+async function verifyAdminPin(pin) {
+  const { data, error } = await _sb.rpc("verify_admin_pin", { attempt: pin });
+  if (error) throw error;
+  return !!data;
+}
+
+async function setAdminPin(oldPin, newPin) {
+  const { data, error } = await _sb.rpc("set_admin_pin", { old_pin: oldPin, new_pin: newPin });
+  if (error) throw error;
+  return !!data;
+}
+
+// ─────────────────────────────────────────────────────────────
 //  AUTH
 // ─────────────────────────────────────────────────────────────
 
@@ -419,6 +489,10 @@ window.DB = {
   // Raw client (escape hatch for one-off queries)
   client: _sb,
 
+  // Admin PIN
+  verifyAdminPin,
+  setAdminPin,
+
   // Products
   fetchProducts,
   upsertProducts,
@@ -430,6 +504,8 @@ window.DB = {
   // Store status
   fetchStoreStatus,
   saveStoreStatus,
+  saveCheckoutAccess,
+  saveTicketGateOverride,
 
   // Orders
   logOrder,

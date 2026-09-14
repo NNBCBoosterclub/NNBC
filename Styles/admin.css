@@ -1,0 +1,8 @@
+/* Composition manifest for admin styles. Keep import order stable. */
+@import url("./admin/auth.css");
+@import url("./admin/shell.css");
+@import url("./admin/forms.css");
+@import url("./admin/product-list.css");
+@import url("./admin/orders.css");
+@import url("./admin/layout-modals.css");
+@import url("./admin/status-receipts.css");
